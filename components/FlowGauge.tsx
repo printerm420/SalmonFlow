@@ -1,20 +1,21 @@
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Svg, { Path, Circle, G } from 'react-native-svg';
+import Svg, { Path, Circle, Line, G } from 'react-native-svg';
 import Animated, { useSharedValue, useAnimatedProps, withTiming, Easing } from 'react-native-reanimated';
 
 // ------------------------------------------------------------------
-// CONFIG
+// CONFIG - Horizontal Semi-Circle (180°)
 // ------------------------------------------------------------------
-const GAUGE_SIZE = 280;
-const RADIUS = 120;
-const STROKE_WIDTH = 24;
-const CENTER_X = GAUGE_SIZE / 2;
-const CENTER_Y = GAUGE_SIZE / 2;
+const GAUGE_WIDTH = 320;
+const GAUGE_HEIGHT = 180;
+const RADIUS = 130;
+const STROKE_WIDTH = 28;
+const CENTER_X = GAUGE_WIDTH / 2;
+const CENTER_Y = GAUGE_HEIGHT; // Bottom edge - arc curves upward
 
 const MAX_CFS = 2000;
 
-// Zone definitions with CFS ranges
+// Zone definitions
 const ZONES = [
   { label: 'LOW', min: 0, max: 350, color: '#3B82F6' },
   { label: 'PRIME', min: 350, max: 750, color: '#10B981' },
@@ -26,44 +27,47 @@ const ZONES = [
 // HELPERS
 // ------------------------------------------------------------------
 
-// Convert CFS value to angle (270° range: -135° to +135°)
-const cfsToAngle = (cfs: number): number => {
-  const clampedCfs = Math.min(Math.max(cfs, 0), MAX_CFS);
-  const ratio = clampedCfs / MAX_CFS;
-  return -135 + (ratio * 270); // -135° to +135° (270° total)
-};
-
-// Convert angle to radians for SVG calculations
-const angleToRadians = (angle: number): number => {
-  return (angle * Math.PI) / 180;
-};
-
-// Create SVG arc path
-const createArcPath = (centerX: number, centerY: number, radius: number, startAngle: number, endAngle: number): string => {
-  const startRad = angleToRadians(startAngle);
-  const endRad = angleToRadians(endAngle);
-  
-  const x1 = centerX + radius * Math.cos(startRad);
-  const y1 = centerY + radius * Math.sin(startRad);
-  const x2 = centerX + radius * Math.cos(endRad);
-  const y2 = centerY + radius * Math.sin(endRad);
-  
-  const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
-  
-  return `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`;
-};
-
 // Get status from CFS value
 const getStatus = (cfs: number) => {
-  for (const zone of ZONES) {
-    if (cfs >= zone.min && cfs < zone.max) {
-      return { label: zone.label, color: zone.color };
-    }
-  }
-  return ZONES[ZONES.length - 1]; // Default to last zone
+  if (cfs < 350) return { label: 'LOW', color: '#3B82F6' };
+  if (cfs < 750) return { label: 'PRIME', color: '#10B981' };
+  if (cfs < 1200) return { label: 'CAUTION', color: '#F59E0B' };
+  return { label: 'BLOWN OUT', color: '#EF4444' };
 };
 
-const AnimatedG = Animated.createAnimatedComponent(G);
+// Create arc path for a zone segment
+const createArcPath = (startCfs: number, endCfs: number): string => {
+  const startRatio = startCfs / MAX_CFS;
+  const endRatio = endCfs / MAX_CFS;
+  
+  // Angles: 180° (left) to 0° (right), measured from positive X axis
+  const startAngle = Math.PI * (1 - startRatio);
+  const endAngle = Math.PI * (1 - endRatio);
+  
+  const x1 = CENTER_X + RADIUS * Math.cos(startAngle);
+  const y1 = CENTER_Y - RADIUS * Math.sin(startAngle);
+  const x2 = CENTER_X + RADIUS * Math.cos(endAngle);
+  const y2 = CENTER_Y - RADIUS * Math.sin(endAngle);
+  
+  const largeArc = Math.abs(endRatio - startRatio) > 0.5 ? 1 : 0;
+  
+  return `M ${x1} ${y1} A ${RADIUS} ${RADIUS} 0 ${largeArc} 1 ${x2} ${y2}`;
+};
+
+// Calculate needle endpoint from CFS
+const getNeedlePosition = (cfs: number) => {
+  const clampedCfs = Math.min(Math.max(cfs, 0), MAX_CFS);
+  const ratio = clampedCfs / MAX_CFS;
+  const angle = Math.PI * (1 - ratio); // 180° to 0° in radians
+  const needleLength = RADIUS - 15;
+  
+  return {
+    x: CENTER_X + needleLength * Math.cos(angle),
+    y: CENTER_Y - needleLength * Math.sin(angle),
+  };
+};
+
+const AnimatedLine = Animated.createAnimatedComponent(Line);
 
 // ------------------------------------------------------------------
 // COMPONENT
@@ -74,19 +78,25 @@ interface FlowGaugeProps {
 }
 
 export default function FlowGauge({ currentCFS }: FlowGaugeProps) {
-  const needleRotation = useSharedValue(-135); // Start at minimum position
+  const animatedCFS = useSharedValue(0);
 
   useEffect(() => {
-    const targetAngle = cfsToAngle(currentCFS);
-    needleRotation.value = withTiming(targetAngle, {
+    animatedCFS.value = withTiming(currentCFS, {
       duration: 1000,
       easing: Easing.out(Easing.cubic),
     });
   }, [currentCFS]);
 
   const animatedNeedleProps = useAnimatedProps(() => {
+    const cfs = animatedCFS.value;
+    const clampedCfs = Math.min(Math.max(cfs, 0), MAX_CFS);
+    const ratio = clampedCfs / MAX_CFS;
+    const angle = Math.PI * (1 - ratio);
+    const needleLength = RADIUS - 15;
+    
     return {
-      transform: `rotate(${needleRotation.value} ${CENTER_X} ${CENTER_Y})`,
+      x2: CENTER_X + needleLength * Math.cos(angle),
+      y2: CENTER_Y - needleLength * Math.sin(angle),
     };
   });
 
@@ -94,57 +104,40 @@ export default function FlowGauge({ currentCFS }: FlowGaugeProps) {
 
   return (
     <View style={styles.container}>
-      <Svg width={GAUGE_SIZE} height={GAUGE_SIZE} style={styles.svg}>
-        {/* Background circle (optional, for visual reference) */}
-        <Circle
-          cx={CENTER_X}
-          cy={CENTER_Y}
-          r={RADIUS}
-          fill="none"
-          stroke="#2D2D2D"
-          strokeWidth={2}
-          opacity={0.3}
-        />
-        
+      <Svg width={GAUGE_WIDTH} height={GAUGE_HEIGHT + 10}>
         {/* Zone arcs */}
-        {ZONES.map((zone, index) => {
-          const startAngle = -135 + ((zone.min / MAX_CFS) * 270);
-          const endAngle = -135 + ((zone.max / MAX_CFS) * 270);
-          const arcPath = createArcPath(CENTER_X, CENTER_Y, RADIUS, startAngle, endAngle);
-          
-          return (
-            <Path
-              key={zone.label}
-              d={arcPath}
-              stroke={zone.color}
-              strokeWidth={STROKE_WIDTH}
-              fill="none"
-              strokeLinecap="round"
-            />
-          );
-        })}
-
-        {/* Needle */}
-        <AnimatedG animatedProps={animatedNeedleProps}>
+        {ZONES.map((zone) => (
           <Path
-            d={`M ${CENTER_X} ${CENTER_Y - RADIUS + 15} L ${CENTER_X - 4} ${CENTER_Y + 8} L ${CENTER_X + 4} ${CENTER_Y + 8} Z`}
-            fill="#FFFFFF"
-            stroke="#000000"
-            strokeWidth={1}
+            key={zone.label}
+            d={createArcPath(zone.min, zone.max)}
+            stroke={zone.color}
+            strokeWidth={STROKE_WIDTH}
+            fill="none"
+            strokeLinecap="butt"
           />
-        </AnimatedG>
+        ))}
 
-        {/* Center dot */}
-        <Circle cx={CENTER_X} cy={CENTER_Y} r={8} fill="#FFFFFF" stroke="#000000" strokeWidth={2} />
+        {/* Animated needle */}
+        <AnimatedLine
+          x1={CENTER_X}
+          y1={CENTER_Y}
+          animatedProps={animatedNeedleProps}
+          stroke="#FFFFFF"
+          strokeWidth={4}
+          strokeLinecap="round"
+        />
+
+        {/* Center pivot */}
+        <Circle cx={CENTER_X} cy={CENTER_Y} r={8} fill="#FFFFFF" />
       </Svg>
 
-      {/* Center text */}
-      <View style={styles.centerText}>
+      {/* CFS Value */}
+      <View style={styles.valueContainer}>
         <Text style={styles.cfsValue}>{currentCFS}</Text>
         <Text style={styles.cfsLabel}>CFS</Text>
       </View>
 
-      {/* Status text below gauge */}
+      {/* Status label */}
       <View style={styles.statusContainer}>
         <Text style={[styles.statusText, { color: status.color }]}>
           {status.label}
@@ -157,39 +150,33 @@ export default function FlowGauge({ currentCFS }: FlowGaugeProps) {
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
-    justifyContent: 'center',
+    width: GAUGE_WIDTH,
   },
-  svg: {
-    // Add any SVG-specific styles here if needed
-  },
-  centerText: {
+  valueContainer: {
     position: 'absolute',
+    top: GAUGE_HEIGHT - 80,
     alignItems: 'center',
-    justifyContent: 'center',
-    top: GAUGE_SIZE / 2 - 20,
   },
   cfsValue: {
     color: '#FFFFFF',
-    fontSize: 72,
+    fontSize: 64,
     fontWeight: 'bold',
     letterSpacing: -2,
-    textAlign: 'center',
   },
   cfsLabel: {
     color: '#9CA3AF',
     fontSize: 16,
     fontWeight: '500',
-    marginTop: -8,
-    textAlign: 'center',
+    marginTop: -6,
   },
   statusContainer: {
-    marginTop: 16,
+    marginTop: 20,
     alignItems: 'center',
   },
   statusText: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    letterSpacing: -1,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
   },
 });
-

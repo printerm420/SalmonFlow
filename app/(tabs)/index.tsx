@@ -109,8 +109,7 @@ const styles = StyleSheet.create({
   },
   gaugeSection: {
     alignItems: 'center',
-    marginBottom: 32,
-    minHeight: 320, // Ensure enough space for the gauge
+    marginBottom: 24,
   },
   cardsRow: {
     flexDirection: 'row',
