@@ -1,8 +1,8 @@
-import React, { useCallback, useState } from 'react';
-import { View, Text, ScrollView, RefreshControl, SafeAreaView, StyleSheet } from 'react-native';
-import { Stack } from 'expo-router';
 import FlowGauge from '@/components/FlowGauge';
 import StatCard from '@/components/StatCard';
+import { Stack } from 'expo-router';
+import React, { useCallback, useState } from 'react';
+import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 // Mock Data following PRD spec
 const MOCK_DATA = {
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   },
   gaugeSection: {
     alignItems: 'center',
-    marginBottom: 150,
+    marginBottom: 24,
   },
   cardsRow: {
     flexDirection: 'row',

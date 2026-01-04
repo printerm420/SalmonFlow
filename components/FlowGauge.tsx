@@ -131,17 +131,18 @@ export default function FlowGauge({ currentCFS }: FlowGaugeProps) {
         <Circle cx={CENTER_X} cy={CENTER_Y} r={10} fill="#FFFFFF" />
       </Svg>
 
-      {/* CFS Value */}
-      <View style={styles.valueContainer}>
+      {/* Text Container - Below Gauge */}
+      <View style={styles.textContainer}>
+        {/* Number */}
         <Text style={styles.cfsValue}>{currentCFS}</Text>
-        <Text style={styles.cfsLabel}>CFS</Text>
-      </View>
-
-      {/* Status label */}
-      <View style={styles.statusContainer}>
+        
+        {/* Status */}
         <Text style={[styles.statusText, { color: status.color }]}>
           {status.label}
         </Text>
+        
+        {/* Label */}
+        <Text style={styles.cfsLabel}>CURRENT CFS</Text>
       </View>
     </View>
   );
@@ -152,33 +153,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: GAUGE_WIDTH,
   },
-  valueContainer: {
-    position: 'absolute',
-    top: GAUGE_HEIGHT - 90,
+  textContainer: {
     alignItems: 'center',
+    marginTop: 10,
   },
   cfsValue: {
     color: '#FFFFFF',
-    fontSize: 72,
+    fontSize: 80,
     fontWeight: 'bold',
     letterSpacing: -3,
-  },
-  cfsLabel: {
-    color: '#6B7280',
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: -4,
-    textTransform: 'uppercase',
-    letterSpacing: 2,
-  },
-  statusContainer: {
-    marginTop: 24,
-    alignItems: 'center',
+    lineHeight: 80,
   },
   statusText: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '900',
     textTransform: 'uppercase',
     letterSpacing: 4,
+    marginTop: 8,
+  },
+  cfsLabel: {
+    color: '#6B7280',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
   },
 });
