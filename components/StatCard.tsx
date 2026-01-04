@@ -21,7 +21,7 @@ export default function StatCard({ icon, value, label, valueColor = '#FFFFFF' }:
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1,
+    flex: 1, // Ensures cards take equal width
     backgroundColor: '#1E1E1E',
     borderRadius: 20,
     paddingVertical: 20,

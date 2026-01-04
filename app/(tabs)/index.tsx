@@ -52,10 +52,7 @@ export default function StatusScreen() {
           <FlowGauge currentCFS={MOCK_DATA.currentCFS} />
         </View>
 
-        {/* Spacer to push cards down */}
-        <View style={styles.spacer} />
-
-        {/* Info Cards Row - lower on screen */}
+        {/* Info Cards Row - directly below gauge */}
         <View style={styles.cardsRow}>
           <StatCard
             icon="thermometer"
@@ -106,15 +103,13 @@ const styles = StyleSheet.create({
   },
   gaugeSection: {
     alignItems: 'center',
-  },
-  spacer: {
-    flex: 1,
-    minHeight: 40,
+    marginBottom: 150,
   },
   cardsRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 16,
     marginBottom: 20,
+    width: '100%',
   },
   updateIndicator: {
     flexDirection: 'row',
