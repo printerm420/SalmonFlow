@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface StatCardProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -21,7 +21,7 @@ export default function StatCard({ icon, value, label, valueColor = '#FFFFFF' }:
 
 const styles = StyleSheet.create({
   card: {
-    flex: 1, // Ensures cards take equal width
+    flex: 1,
     backgroundColor: '#1E1E1E',
     borderRadius: 20,
     paddingVertical: 20,
