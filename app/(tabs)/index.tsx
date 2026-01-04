@@ -108,11 +108,13 @@ const styles = StyleSheet.create({
   gaugeSection: {
     alignItems: 'center',
     marginBottom: 24,
+    marginTop: 8, // Pushes everything below header down
   },
   cardsRow: {
     flexDirection: 'row',
     gap: 16,
     marginBottom: 20,
+    marginTop: 20,
     width: '100%',
   },
   updateIndicator: {
