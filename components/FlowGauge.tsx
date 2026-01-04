@@ -4,12 +4,12 @@ import Svg, { Path, Circle, Line, G } from 'react-native-svg';
 import Animated, { useSharedValue, useAnimatedProps, withTiming, Easing } from 'react-native-reanimated';
 
 // ------------------------------------------------------------------
-// CONFIG - Horizontal Semi-Circle (180°)
+// CONFIG - Horizontal Semi-Circle (180°) - BIG and Bold
 // ------------------------------------------------------------------
-const GAUGE_WIDTH = 320;
-const GAUGE_HEIGHT = 180;
-const RADIUS = 130;
-const STROKE_WIDTH = 28;
+const GAUGE_WIDTH = 360;
+const GAUGE_HEIGHT = 200;
+const RADIUS = 160;
+const STROKE_WIDTH = 32;
 const CENTER_X = GAUGE_WIDTH / 2;
 const CENTER_Y = GAUGE_HEIGHT; // Bottom edge - arc curves upward
 
@@ -123,12 +123,12 @@ export default function FlowGauge({ currentCFS }: FlowGaugeProps) {
           y1={CENTER_Y}
           animatedProps={animatedNeedleProps}
           stroke="#FFFFFF"
-          strokeWidth={4}
+          strokeWidth={5}
           strokeLinecap="round"
         />
 
         {/* Center pivot */}
-        <Circle cx={CENTER_X} cy={CENTER_Y} r={8} fill="#FFFFFF" />
+        <Circle cx={CENTER_X} cy={CENTER_Y} r={10} fill="#FFFFFF" />
       </Svg>
 
       {/* CFS Value */}
@@ -154,29 +154,31 @@ const styles = StyleSheet.create({
   },
   valueContainer: {
     position: 'absolute',
-    top: GAUGE_HEIGHT - 80,
+    top: GAUGE_HEIGHT - 90,
     alignItems: 'center',
   },
   cfsValue: {
     color: '#FFFFFF',
-    fontSize: 64,
+    fontSize: 72,
     fontWeight: 'bold',
-    letterSpacing: -2,
+    letterSpacing: -3,
   },
   cfsLabel: {
-    color: '#9CA3AF',
-    fontSize: 16,
-    fontWeight: '500',
-    marginTop: -6,
+    color: '#6B7280',
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: -4,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
   },
   statusContainer: {
-    marginTop: 20,
+    marginTop: 24,
     alignItems: 'center',
   },
   statusText: {
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '900',
     textTransform: 'uppercase',
-    letterSpacing: 2,
+    letterSpacing: 4,
   },
 });

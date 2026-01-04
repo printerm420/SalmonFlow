@@ -42,42 +42,42 @@ export default function StatusScreen() {
           />
         }
       >
-        <View style={styles.content}>
-          
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Salmon River</Text>
-          </View>
-
-          {/* Hero Gauge - takes 50% of screen */}
-          <View style={styles.gaugeSection}>
-            <FlowGauge currentCFS={MOCK_DATA.currentCFS} />
-          </View>
-
-          {/* Info Cards Row */}
-          <View style={styles.cardsRow}>
-            <StatCard
-              icon="thermometer"
-              value={`${MOCK_DATA.waterTempF}°F`}
-              label="Water Temp"
-            />
-            <StatCard
-              icon={trendIcon}
-              value={trendValue}
-              label="24hr Trend"
-              valueColor={trendColor}
-            />
-          </View>
-
-          {/* Update Indicator */}
-          <View style={styles.updateIndicator}>
-            <View style={styles.statusDot} />
-            <Text style={styles.updateText}>
-              Updated just now • USGS 04250200
-            </Text>
-          </View>
-
+        {/* Header - minimal, top */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Salmon River</Text>
         </View>
+
+        {/* Hero Gauge - the main event, positioned high */}
+        <View style={styles.gaugeSection}>
+          <FlowGauge currentCFS={MOCK_DATA.currentCFS} />
+        </View>
+
+        {/* Spacer to push cards down */}
+        <View style={styles.spacer} />
+
+        {/* Info Cards Row - lower on screen */}
+        <View style={styles.cardsRow}>
+          <StatCard
+            icon="thermometer"
+            value={`${MOCK_DATA.waterTempF}°F`}
+            label="Water Temp"
+          />
+          <StatCard
+            icon={trendIcon}
+            value={trendValue}
+            label="24hr Trend"
+            valueColor={trendColor}
+          />
+        </View>
+
+        {/* Update Indicator - bottom */}
+        <View style={styles.updateIndicator}>
+          <View style={styles.statusDot} />
+          <Text style={styles.updateText}>
+            Updated just now • USGS 04250200
+          </Text>
+        </View>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -90,43 +90,43 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
+    paddingHorizontal: 16,
     paddingBottom: 40,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    paddingTop: 16,
+    marginBottom: 24,
   },
   headerTitle: {
     color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: 'bold',
-    letterSpacing: -0.5,
+    fontSize: 20,
+    fontWeight: '600',
+    letterSpacing: 0.5,
   },
   gaugeSection: {
     alignItems: 'center',
-    marginBottom: 24,
+  },
+  spacer: {
+    flex: 1,
+    minHeight: 40,
   },
   cardsRow: {
     flexDirection: 'row',
-    gap: 16,
-    marginBottom: 24,
+    gap: 12,
+    marginBottom: 20,
   },
   updateIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 16,
+    paddingBottom: 16,
   },
   statusDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#10B981', // Green for fresh data
+    backgroundColor: '#10B981',
     marginRight: 8,
   },
   updateText: {

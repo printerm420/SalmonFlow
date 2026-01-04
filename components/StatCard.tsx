@@ -23,27 +23,30 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: '#1E1E1E',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#2D2D2D',
-    minHeight: 100,
   },
   icon: {
-    marginBottom: 8,
+    marginBottom: 10,
+    opacity: 0.7,
   },
   value: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
     textAlign: 'center',
   },
   label: {
     color: '#6B7280',
-    fontSize: 12,
-    marginTop: 4,
+    fontSize: 11,
+    marginTop: 6,
     textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
 });
 
