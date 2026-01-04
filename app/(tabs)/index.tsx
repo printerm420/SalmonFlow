@@ -1,5 +1,6 @@
 import FlowGauge from '@/components/FlowGauge';
 import StatCard from '@/components/StatCard';
+import { FontAwesome6 } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -44,7 +45,8 @@ export default function StatusScreen() {
       >
         {/* Header - minimal, top */}
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Salmon River</Text>
+          <FontAwesome6 name="fish-fins" size={24} color="#10B981" style={{ marginRight: 12 }} />
+          <Text style={styles.headerTitle}>Pulaski Salmon Flow</Text>
         </View>
 
         {/* Hero Gauge - the main event, positioned high */}
@@ -91,14 +93,16 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   header: {
+    flexDirection: 'row',
     alignItems: 'center',
     paddingTop: 16,
     marginBottom: 24,
+    marginLeft: 4, // Adding a bit of left margin as requested (visual alignment)
   },
   headerTitle: {
     color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 22, // Made slightly bigger to match "Pulaski Salmon Flow" length nicely
+    fontWeight: 'bold',
     letterSpacing: 0.5,
   },
   gaugeSection: {
