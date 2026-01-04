@@ -1,98 +1,163 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, ScrollView, RefreshControl, SafeAreaView, StyleSheet } from 'react-native';
+import { Stack } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import FlowGauge from '@/components/FlowGauge';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+// Mock Data
+const MOCK_FLOW = 550;
+const MOCK_TEMP = 48;
+const LAST_UPDATED = "Just now";
 
-export default function HomeScreen() {
+// Helper to get status details
+const getStatus = (cfs: number) => {
+  if (cfs < 350) return { label: 'LOW', color: 'text-blue-500', hex: '#3B82F6' };
+  if (cfs < 750) return { label: 'PRIME', color: 'text-emerald-500', hex: '#10B981' };
+  if (cfs < 1200) return { label: 'CAUTION', color: 'text-amber-500', hex: '#F59E0B' };
+  return { label: 'BLOWN OUT', color: 'text-red-500', hex: '#EF4444' };
+};
+
+export default function StatusScreen() {
+  const [refreshing, setRefreshing] = useState(false);
+  const status = getStatus(MOCK_FLOW);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 2000);
+  }, []);
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <SafeAreaView style={styles.container}>
+      <Stack.Screen options={{ headerShown: false }} />
+      
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={status.hex} />
+        }
+      >
+        <View style={styles.mainContent}>
+          
+          {/* Header */}
+          <Text style={styles.header}>
+            Salmon River
+          </Text>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+          {/* Hero Gauge */}
+          <View style={styles.gaugeContainer}>
+            <FlowGauge currentCFS={MOCK_FLOW} />
+          </View>
+
+          {/* Status Label */}
+          <View style={styles.statusContainer}>
+            <Text style={styles.statusSubtext}>Current Conditions</Text>
+            <Text style={[styles.statusText, { color: status.hex }]}>
+              {status.label}
+            </Text>
+          </View>
+
+          {/* Secondary Info Cards */}
+          <View style={styles.cardsContainer}>
+            
+            {/* Temperature Card */}
+            <View style={styles.card}>
+              <Ionicons name="thermometer" size={24} color="#9CA3AF" />
+              <Text style={styles.cardValue}>{MOCK_TEMP}°F</Text>
+              <Text style={styles.cardLabel}>Water Temp</Text>
+            </View>
+
+             {/* Update Info Card */}
+             <View style={styles.card}>
+              <Ionicons name="refresh" size={24} color="#9CA3AF" />
+              <Text style={styles.cardValueSmall}>{LAST_UPDATED}</Text>
+              <Text style={styles.cardLabel}>Last Checked</Text>
+            </View>
+
+          </View>
+
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+  scrollContent: {
+    flexGrow: 1,
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'center',
+    paddingBottom: 40,
   },
-  stepContainer: {
-    gap: 8,
+  mainContent: {
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 16,
+  },
+  header: {
+    color: '#FFFFFF',
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 48,
+    letterSpacing: -0.5,
+  },
+  gaugeContainer: {
+    marginBottom: 32,
+  },
+  statusContainer: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  statusSubtext: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 2,
     marginBottom: 8,
+    fontWeight: '500',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  statusText: {
+    fontSize: 48,
+    fontWeight: '900',
+    letterSpacing: -2,
+  },
+  cardsContainer: {
+    flexDirection: 'row',
+    width: '100%',
+    maxWidth: 320,
+    justifyContent: 'space-between',
+    gap: 16,
+  },
+  card: {
+    flex: 1,
+    backgroundColor: '#1E1E1E',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#2D2D2D',
+  },
+  cardValue: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 8,
+  },
+  cardValueSmall: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  cardLabel: {
+    color: '#6B7280',
+    fontSize: 10,
+    marginTop: 4,
   },
 });
