@@ -1,14 +1,15 @@
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
+// import { useState } from 'react';  // Uncomment when notifications are ready
 import {
   Linking,
-  Modal,
+  // Modal,  // Uncomment when notifications are ready
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Switch,
+  // Switch,  // Uncomment when notifications are ready
   Text,
   View,
 } from 'react-native';
@@ -16,21 +17,22 @@ import {
 const APP_VERSION = '1.0.0';
 
 export default function SettingsScreen() {
-  const [primeAlertEnabled, setPrimeAlertEnabled] = useState(false);
-  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  // Uncomment when notifications are ready:
+  // const [primeAlertEnabled, setPrimeAlertEnabled] = useState(false);
+  // const [showPremiumModal, setShowPremiumModal] = useState(false);
 
-  const handlePrimeAlertToggle = (value: boolean) => {
-    if (value) {
-      setShowPremiumModal(true);
-    } else {
-      setPrimeAlertEnabled(false);
-    }
-  };
+  // const handlePrimeAlertToggle = (value: boolean) => {
+  //   if (value) {
+  //     setShowPremiumModal(true);
+  //   } else {
+  //     setPrimeAlertEnabled(false);
+  //   }
+  // };
 
-  const closePremiumModal = () => {
-    setShowPremiumModal(false);
-    setPrimeAlertEnabled(false);
-  };
+  // const closePremiumModal = () => {
+  //   setShowPremiumModal(false);
+  //   setPrimeAlertEnabled(false);
+  // };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -47,7 +49,7 @@ export default function SettingsScreen() {
           <Text style={styles.headerTitle}>Settings</Text>
         </View>
 
-        {/* Alerts Section */}
+        {/* Alerts Section - Commented out until notifications are ready
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="notifications" size={18} color="#10B981" />
@@ -85,6 +87,7 @@ export default function SettingsScreen() {
             </View>
           </View>
         </View>
+        */}
 
         {/* Preferences Section */}
         <View style={styles.section}>
@@ -202,7 +205,7 @@ export default function SettingsScreen() {
 
       </ScrollView>
 
-      {/* Premium Modal */}
+      {/* Premium Modal - Uncomment when notifications are ready
       <Modal
         visible={showPremiumModal}
         transparent={true}
@@ -243,6 +246,7 @@ export default function SettingsScreen() {
           </View>
         </View>
       </Modal>
+      */}
     </SafeAreaView>
   );
 }
@@ -272,7 +276,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   section: {
-    marginBottom: 28,
+    marginBottom:20,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -376,14 +380,14 @@ const styles = StyleSheet.create({
   },
   footer: {
     alignItems: 'center',
-    paddingVertical: 32,
-    marginTop: 16,
+    paddingVertical: 0,
+    marginTop: -10,
   },
   footerTitle: {
     color: '#FFFFFF',
     fontSize: 20,
     fontWeight: 'bold',
-    marginTop: 12,
+    marginTop: 1,
   },
   footerSubtitle: {
     color: '#6B7280',
