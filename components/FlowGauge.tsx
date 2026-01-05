@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import Svg, { Path, Circle, Line, G } from 'react-native-svg';
-import Animated, { useSharedValue, useAnimatedProps, withTiming, Easing } from 'react-native-reanimated';
+import { StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, useAnimatedProps, useSharedValue, withTiming } from 'react-native-reanimated';
+import Svg, { Circle, Line, Path } from 'react-native-svg';
 
 // ------------------------------------------------------------------
 // CONFIG - Horizontal Semi-Circle (180°) - BIG and Bold
