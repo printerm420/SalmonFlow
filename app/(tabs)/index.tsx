@@ -4,6 +4,7 @@ import { FontAwesome6 } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
 // USGS Site: 04250200 (Salmon River at Pulaski, NY)
 // Parameter 00060 = Discharge (CFS)
@@ -45,6 +46,28 @@ export default function StatusScreen() {
   const [data, setData] = useState<FlowData>(DEFAULT_STATE);
   const [refreshing, setRefreshing] = useState(false);
   const [timeAgo, setTimeAgo] = useState('just now');
+
+  // Pulsing animation for status dot
+  const pulseOpacity = useSharedValue(1);
+  const pulseScale = useSharedValue(1);
+
+  useEffect(() => {
+    pulseOpacity.value = withRepeat(
+      withTiming(0.4, { duration: 700, easing: Easing.inOut(Easing.ease) }),
+      -1, // infinite
+      true // reverse
+    );
+    pulseScale.value = withRepeat(
+      withTiming(1.3, { duration: 700, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
+  }, []);
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    opacity: pulseOpacity.value,
+    transform: [{ scale: pulseScale.value }],
+  }));
 
   const fetchFlowData = useCallback(async () => {
     try {
@@ -198,7 +221,7 @@ export default function StatusScreen() {
 
         {/* Update Indicator - bottom */}
         <View style={styles.updateIndicator}>
-          <View style={[styles.statusDot, { backgroundColor: statusDotColor }]} />
+          <Animated.View style={[styles.statusDot, { backgroundColor: statusDotColor }, pulseStyle]} />
           <Text style={styles.updateText}>
             {data.error 
               ? `Error: ${data.error}` 
