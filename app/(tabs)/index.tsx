@@ -245,7 +245,7 @@ export default function StatusScreen() {
     ? `${data.cfsDelta! >= 0 ? '+' : ''}${data.cfsDelta} CFS`
     : '--';
   const cfsTrendSubLabel = hasCfsTrend && data.trendPercent !== null
-    ? `${cfsTrendWord} [${data.trendPercent >= 0 ? '+' : ''}${data.trendPercent}%]`
+    ? `${cfsTrendWord} ${data.trendPercent >= 0 ? '+' : ''}${data.trendPercent}%`
     : undefined;
 
   // Barometer display logic
@@ -328,7 +328,8 @@ export default function StatusScreen() {
                   size={18} 
                   color={baroTrendColor} 
                 />
-                <Text style={[styles.baroTrendText, { color: baroTrendColor }]}>
+                {/* <Text style={[styles.baroTrendText, { color: baroTrendColor }]}> */}
+                <Text style={styles.baroTrendText}>
                   {barometer.trend}
                 </Text>
                 {barometer.deltaInHg !== null && (
@@ -440,6 +441,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   baroTrendText: {
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
   },
