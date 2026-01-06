@@ -7,13 +7,25 @@ interface StatCardProps {
   value: string;
   label: string;
   valueColor?: string;
+  subLabel?: string;
+  subLabelColor?: string;
 }
 
-export default function StatCard({ icon, value, label, valueColor = '#FFFFFF' }: StatCardProps) {
+export default function StatCard({ 
+  icon, 
+  value, 
+  label, 
+  valueColor = '#FFFFFF',
+  subLabel,
+  subLabelColor = '#6B7280',
+}: StatCardProps) {
   return (
     <View style={styles.card}>
       <Ionicons name={icon} size={24} color="#9CA3AF" style={styles.icon} />
       <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
+      {subLabel ? (
+        <Text style={[styles.subLabel, { color: subLabelColor }]}>{subLabel}</Text>
+      ) : null}
       <Text style={styles.label}>{label}</Text>
     </View>
   );
@@ -40,6 +52,12 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
   },
+  subLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
+    textAlign: 'center',
+  },
   label: {
     color: '#6B7280',
     fontSize: 11,
@@ -49,4 +67,3 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 });
-
