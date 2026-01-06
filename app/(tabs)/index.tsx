@@ -7,13 +7,13 @@ import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from
 
 // USGS Site: 04250200 (Salmon River at Pulaski, NY)
 // Parameter 00060 = Discharge (CFS)
-// Parameter 00010 = Water Temperature (°C)
+// Parameter 00065 = Gage Height (ft)
 const USGS_SITE = '04250200';
 const USGS_API_BASE = 'https://waterservices.usgs.gov/nwis/iv/?format=json';
 
 interface FlowData {
   currentCFS: number;
-  waterTempF: number | null;
+  gageHeightFt: number | null;
   trend24hr: number | null; // percentage change
   lastUpdated: Date;
   isLoading: boolean;
@@ -22,15 +22,12 @@ interface FlowData {
 
 const DEFAULT_STATE: FlowData = {
   currentCFS: 0,
-  waterTempF: null,
+  gageHeightFt: null,
   trend24hr: null,
   lastUpdated: new Date(),
   isLoading: true,
   error: null,
 };
-
-// Convert Celsius to Fahrenheit
-const celsiusToFahrenheit = (c: number): number => Math.round((c * 9/5) + 32);
 
 // Format "Updated X ago" text
 const getTimeAgo = (date: Date): string => {
@@ -52,7 +49,7 @@ export default function StatusScreen() {
   const fetchFlowData = useCallback(async () => {
     try {
       // Fetch current values + 24hr period for trend calculation
-      const currentUrl = `${USGS_API_BASE}&sites=${USGS_SITE}&parameterCd=00060,00010`;
+      const currentUrl = `${USGS_API_BASE}&sites=${USGS_SITE}&parameterCd=00060,00065`;
       const historyUrl = `${USGS_API_BASE}&sites=${USGS_SITE}&parameterCd=00060&period=P1D`;
 
       const [currentRes, historyRes] = await Promise.all([
@@ -69,7 +66,7 @@ export default function StatusScreen() {
       const timeSeries = currentJson?.value?.timeSeries || [];
       
       let currentCFS = 0;
-      let waterTempF: number | null = null;
+      let gageHeightFt: number | null = null;
       let lastUpdated = new Date();
 
       for (const series of timeSeries) {
@@ -82,10 +79,9 @@ export default function StatusScreen() {
             // Discharge (CFS)
             currentCFS = Math.round(parseFloat(latestValue.value));
             lastUpdated = new Date(latestValue.dateTime);
-          } else if (paramCode === '00010') {
-            // Water Temperature (Celsius → Fahrenheit)
-            const tempC = parseFloat(latestValue.value);
-            waterTempF = celsiusToFahrenheit(tempC);
+          } else if (paramCode === '00065') {
+            // Gage Height (ft)
+            gageHeightFt = parseFloat(parseFloat(latestValue.value).toFixed(2));
           }
         }
       }
@@ -105,7 +101,7 @@ export default function StatusScreen() {
 
       setData({
         currentCFS,
-        waterTempF,
+        gageHeightFt,
         trend24hr,
         lastUpdated,
         isLoading: false,
@@ -188,9 +184,9 @@ export default function StatusScreen() {
         {/* Info Cards Row - directly below gauge */}
         <View style={styles.cardsRow}>
           <StatCard
-            icon="thermometer"
-            value={data.waterTempF !== null ? `${data.waterTempF}°F` : '--'}
-            label="Water Temp"
+            icon="water"
+            value={data.gageHeightFt !== null ? `${data.gageHeightFt} ft` : '--'}
+            label="Gage Height"
           />
           <StatCard
             icon={trendIcon}
