@@ -1,10 +1,11 @@
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Linking,
   Pressable,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -13,40 +14,195 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 
-// Mock Weather Data per PRD
-const MOCK_WEATHER = {
-  current: { temp: 74, condition: 'Partly Cloudy', feelsLike: 78 },
-  today: { high: 82, low: 68, precip: 15, wind: '8 mph SE', daylight: '14h 22m' },
-  forecast: [
-    { day: 'Today', high: 82, low: 68, precip: 15, icon: 'sun' },
-    { day: 'Mon', high: 76, low: 62, precip: 80, icon: 'cloud-rain' },
-    { day: 'Tue', high: 72, low: 58, precip: 40, icon: 'cloud-sun' },
-    { day: 'Wed', high: 78, low: 64, precip: 10, icon: 'sun' },
-    { day: 'Thu', high: 80, low: 66, precip: 5, icon: 'sun' },
-    { day: 'Fri', high: 75, low: 60, precip: 60, icon: 'cloud-rain' },
-    { day: 'Sat', high: 70, low: 55, precip: 25, icon: 'cloud' },
-  ],
+// Pulaski, NY coordinates
+const PULASKI_LAT = 43.57;
+const PULASKI_LON = -76.13;
+
+// Weather code to icon mapping (WMO codes)
+const getWeatherIcon = (code: number): { name: string; color: string } => {
+  // Clear
+  if (code === 0) return { name: 'sun', color: '#FBBF24' };
+  // Mainly clear, partly cloudy
+  if (code === 1 || code === 2) return { name: 'cloud-sun', color: '#9CA3AF' };
+  // Overcast
+  if (code === 3) return { name: 'cloud', color: '#6B7280' };
+  // Fog
+  if (code >= 45 && code <= 48) return { name: 'smog', color: '#6B7280' };
+  // Drizzle
+  if (code >= 51 && code <= 57) return { name: 'cloud-rain', color: '#60A5FA' };
+  // Rain
+  if (code >= 61 && code <= 67) return { name: 'cloud-showers-heavy', color: '#3B82F6' };
+  // Snow
+  if (code >= 71 && code <= 77) return { name: 'snowflake', color: '#A5B4FC' };
+  // Rain showers
+  if (code >= 80 && code <= 82) return { name: 'cloud-rain', color: '#3B82F6' };
+  // Snow showers
+  if (code >= 85 && code <= 86) return { name: 'snowflake', color: '#A5B4FC' };
+  // Thunderstorm
+  if (code >= 95 && code <= 99) return { name: 'cloud-bolt', color: '#F59E0B' };
+  
+  return { name: 'sun', color: '#FBBF24' };
 };
 
-// Weather icon mapping
-const getWeatherIcon = (icon: string) => {
-  switch (icon) {
-    case 'sun':
-      return { name: 'sun', color: '#FBBF24' };
-    case 'cloud-sun':
-      return { name: 'cloud-sun', color: '#9CA3AF' };
-    case 'cloud':
-      return { name: 'cloud', color: '#6B7280' };
-    case 'cloud-rain':
-      return { name: 'cloud-rain', color: '#3B82F6' };
-    default:
-      return { name: 'sun', color: '#FBBF24' };
-  }
+// Weather code to description
+const getWeatherDescription = (code: number): string => {
+  if (code === 0) return 'Clear Sky';
+  if (code === 1) return 'Mainly Clear';
+  if (code === 2) return 'Partly Cloudy';
+  if (code === 3) return 'Overcast';
+  if (code >= 45 && code <= 48) return 'Foggy';
+  if (code >= 51 && code <= 55) return 'Drizzle';
+  if (code >= 56 && code <= 57) return 'Freezing Drizzle';
+  if (code >= 61 && code <= 65) return 'Rain';
+  if (code >= 66 && code <= 67) return 'Freezing Rain';
+  if (code >= 71 && code <= 75) return 'Snow';
+  if (code === 77) return 'Snow Grains';
+  if (code >= 80 && code <= 82) return 'Rain Showers';
+  if (code >= 85 && code <= 86) return 'Snow Showers';
+  if (code === 95) return 'Thunderstorm';
+  if (code >= 96 && code <= 99) return 'Thunderstorm w/ Hail';
+  return 'Unknown';
+};
+
+// Format wind direction from degrees
+const getWindDirection = (degrees: number): string => {
+  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  const index = Math.round(degrees / 45) % 8;
+  return directions[index];
+};
+
+// Calculate daylight hours from sunrise/sunset
+const calculateDaylight = (sunrise: string, sunset: string): string => {
+  const sunriseDate = new Date(sunrise);
+  const sunsetDate = new Date(sunset);
+  const diffMs = sunsetDate.getTime() - sunriseDate.getTime();
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+  return `${hours}h ${minutes}m`;
+};
+
+// Get day name from date string
+const getDayName = (dateStr: string, index: number): string => {
+  if (index === 0) return 'Today';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { weekday: 'short' });
+};
+
+interface CurrentWeather {
+  temp: number;
+  feelsLike: number;
+  weatherCode: number;
+  windSpeed: number;
+  windDirection: number;
+}
+
+interface DailyForecast {
+  day: string;
+  date: string;
+  high: number;
+  low: number;
+  precip: number;
+  weatherCode: number;
+  sunrise: string;
+  sunset: string;
+}
+
+interface WeatherData {
+  current: CurrentWeather | null;
+  daily: DailyForecast[];
+  isLoading: boolean;
+  error: string | null;
+  lastUpdated: Date;
+}
+
+const DEFAULT_STATE: WeatherData = {
+  current: null,
+  daily: [],
+  isLoading: true,
+  error: null,
+  lastUpdated: new Date(),
 };
 
 export default function ForecastScreen() {
+  const [data, setData] = useState<WeatherData>(DEFAULT_STATE);
   const [webViewLoading, setWebViewLoading] = useState(true);
-  const currentIcon = getWeatherIcon('cloud-sun'); // Partly cloudy
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchWeatherData = useCallback(async () => {
+    try {
+      // Open-Meteo API - free, no key needed
+      const url = `https://api.open-meteo.com/v1/forecast?` +
+        `latitude=${PULASKI_LAT}&longitude=${PULASKI_LON}` +
+        `&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset` +
+        `&temperature_unit=fahrenheit` +
+        `&wind_speed_unit=mph` +
+        `&timezone=America%2FNew_York` +
+        `&forecast_days=7`;
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Failed to fetch weather data');
+
+      const json = await res.json();
+
+      // Parse current weather
+      const current: CurrentWeather = {
+        temp: Math.round(json.current.temperature_2m),
+        feelsLike: Math.round(json.current.apparent_temperature),
+        weatherCode: json.current.weather_code,
+        windSpeed: Math.round(json.current.wind_speed_10m),
+        windDirection: json.current.wind_direction_10m,
+      };
+
+      // Parse daily forecast
+      const daily: DailyForecast[] = json.daily.time.map((date: string, index: number) => ({
+        day: getDayName(date, index),
+        date: date,
+        high: Math.round(json.daily.temperature_2m_max[index]),
+        low: Math.round(json.daily.temperature_2m_min[index]),
+        precip: json.daily.precipitation_probability_max[index] || 0,
+        weatherCode: json.daily.weather_code[index],
+        sunrise: json.daily.sunrise[index],
+        sunset: json.daily.sunset[index],
+      }));
+
+      setData({
+        current,
+        daily,
+        isLoading: false,
+        error: null,
+        lastUpdated: new Date(),
+      });
+
+    } catch (err) {
+      console.error('Error fetching weather data:', err);
+      setData(prev => ({
+        ...prev,
+        isLoading: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      }));
+    }
+  }, []);
+
+  // Fetch on mount
+  useEffect(() => {
+    fetchWeatherData();
+  }, [fetchWeatherData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchWeatherData();
+    setRefreshing(false);
+  }, [fetchWeatherData]);
+
+  // Get current weather display data
+  const currentIcon = data.current ? getWeatherIcon(data.current.weatherCode) : { name: 'sun', color: '#FBBF24' };
+  const currentCondition = data.current ? getWeatherDescription(data.current.weatherCode) : '--';
+  const windDisplay = data.current ? `${data.current.windSpeed} mph ${getWindDirection(data.current.windDirection)}` : '--';
+  
+  // Today's data for details row
+  const today = data.daily[0];
+  const daylightDisplay = today ? calculateDaylight(today.sunrise, today.sunset) : '--';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -56,65 +212,87 @@ export default function ForecastScreen() {
         style={styles.scrollView} 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            tintColor="#FBBF24"
+          />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
           <FontAwesome6 name="cloud-sun" size={22} color="#FBBF24" style={{ marginRight: 12 }} />
           <Text style={styles.headerTitle}>Forecast</Text>
-          <Text style={styles.headerLocation}>Pulaski, NY 13142</Text>
+          <Text style={styles.headerLocation}>Pulaski, NY</Text>
         </View>
 
         {/* Current Weather Hero Card */}
         <View style={styles.currentWeatherCard}>
-          {/* Main temp and condition */}
-          <View style={styles.weatherMain}>
-            <View style={styles.tempContainer}>
-              <Text style={styles.currentTemp}>{MOCK_WEATHER.current.temp}°</Text>
-              <FontAwesome6 
-                name={currentIcon.name} 
-                size={48} 
-                color={currentIcon.color} 
-                style={styles.weatherIcon}
-              />
+          {data.isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#FBBF24" />
+              <Text style={styles.loadingText}>Loading weather...</Text>
             </View>
-            <Text style={styles.condition}>{MOCK_WEATHER.current.condition}</Text>
-            <Text style={styles.feelsLike}>Feels like {MOCK_WEATHER.current.feelsLike}°F</Text>
-          </View>
+          ) : data.error ? (
+            <View style={styles.loadingContainer}>
+              <Ionicons name="cloud-offline" size={48} color="#EF4444" />
+              <Text style={styles.errorText}>Failed to load weather</Text>
+              <Text style={styles.errorSubtext}>Pull down to retry</Text>
+            </View>
+          ) : (
+            <>
+              {/* Main temp and condition */}
+              <View style={styles.weatherMain}>
+                <View style={styles.tempContainer}>
+                  <Text style={styles.currentTemp}>{data.current?.temp ?? '--'}°</Text>
+                  <FontAwesome6 
+                    name={currentIcon.name} 
+                    size={48} 
+                    color={currentIcon.color} 
+                    style={styles.weatherIcon}
+                  />
+                </View>
+                <Text style={styles.condition}>{currentCondition}</Text>
+                <Text style={styles.feelsLike}>Feels like {data.current?.feelsLike ?? '--'}°F</Text>
+              </View>
 
-          {/* Weather Details Row */}
-          <View style={styles.detailsRow}>
-            <View style={styles.detailItem}>
-              <Ionicons name="thermometer-outline" size={18} color="#9CA3AF" />
-              <Text style={styles.detailValue}>
-                {MOCK_WEATHER.today.high}° / {MOCK_WEATHER.today.low}°
-              </Text>
-              <Text style={styles.detailLabel}>High / Low</Text>
-            </View>
-            
-            <View style={styles.detailDivider} />
-            
-            <View style={styles.detailItem}>
-              <Ionicons name="water-outline" size={18} color="#3B82F6" />
-              <Text style={styles.detailValue}>{MOCK_WEATHER.today.precip}%</Text>
-              <Text style={styles.detailLabel}>Precip</Text>
-            </View>
-            
-            <View style={styles.detailDivider} />
-            
-            <View style={styles.detailItem}>
-              <FontAwesome6 name="wind" size={16} color="#9CA3AF" />
-              <Text style={styles.detailValue}>{MOCK_WEATHER.today.wind}</Text>
-              <Text style={styles.detailLabel}>Wind</Text>
-            </View>
-            
-            <View style={styles.detailDivider} />
-            
-            <View style={styles.detailItem}>
-              <Ionicons name="sunny-outline" size={18} color="#FBBF24" />
-              <Text style={styles.detailValue}>{MOCK_WEATHER.today.daylight}</Text>
-              <Text style={styles.detailLabel}>Daylight</Text>
-            </View>
-          </View>
+              {/* Weather Details Row */}
+              <View style={styles.detailsRow}>
+                <View style={styles.detailItem}>
+                  <Ionicons name="thermometer-outline" size={18} color="#9CA3AF" />
+                  <Text style={styles.detailValue}>
+                    {today ? `${today.high}° / ${today.low}°` : '--'}
+                  </Text>
+                  <Text style={styles.detailLabel}>High / Low</Text>
+                </View>
+                
+                <View style={styles.detailDivider} />
+                
+                <View style={styles.detailItem}>
+                  <Ionicons name="water-outline" size={18} color="#3B82F6" />
+                  <Text style={styles.detailValue}>{today?.precip ?? 0}%</Text>
+                  <Text style={styles.detailLabel}>Precip</Text>
+                </View>
+                
+                <View style={styles.detailDivider} />
+                
+                <View style={styles.detailItem}>
+                  <FontAwesome6 name="wind" size={16} color="#9CA3AF" />
+                  <Text style={styles.detailValue}>{windDisplay}</Text>
+                  <Text style={styles.detailLabel}>Wind</Text>
+                </View>
+                
+                <View style={styles.detailDivider} />
+                
+                <View style={styles.detailItem}>
+                  <Ionicons name="sunny-outline" size={18} color="#FBBF24" />
+                  <Text style={styles.detailValue}>{daylightDisplay}</Text>
+                  <Text style={styles.detailLabel}>Daylight</Text>
+                </View>
+              </View>
+            </>
+          )}
         </View>
 
         {/* 7-Day Forecast Section */}
@@ -127,40 +305,46 @@ export default function ForecastScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.forecastScroll}
         >
-          {MOCK_WEATHER.forecast.map((day, index) => {
-            const iconData = getWeatherIcon(day.icon);
-            const isToday = day.day === 'Today';
-            
-            return (
-              <View 
-                key={day.day} 
-                style={[
-                  styles.forecastCard,
-                  isToday && styles.forecastCardToday
-                ]}
-              >
-                <Text style={[styles.forecastDay, isToday && styles.forecastDayToday]}>
-                  {day.day}
-                </Text>
-                <FontAwesome6 
-                  name={iconData.name} 
-                  size={28} 
-                  color={iconData.color} 
-                  style={styles.forecastIcon}
-                />
-                <View style={styles.forecastTemps}>
-                  <Text style={styles.forecastHigh}>{day.high}°</Text>
-                  <Text style={styles.forecastLow}>{day.low}°</Text>
-                </View>
-                {day.precip > 0 && (
-                  <View style={styles.precipBadge}>
-                    <Ionicons name="water" size={10} color="#3B82F6" />
-                    <Text style={styles.precipText}>{day.precip}%</Text>
+          {data.isLoading ? (
+            <View style={styles.forecastLoadingContainer}>
+              <ActivityIndicator size="small" color="#FBBF24" />
+            </View>
+          ) : (
+            data.daily.map((day, index) => {
+              const iconData = getWeatherIcon(day.weatherCode);
+              const isToday = index === 0;
+              
+              return (
+                <View 
+                  key={day.date} 
+                  style={[
+                    styles.forecastCard,
+                    isToday && styles.forecastCardToday
+                  ]}
+                >
+                  <Text style={[styles.forecastDay, isToday && styles.forecastDayToday]}>
+                    {day.day}
+                  </Text>
+                  <FontAwesome6 
+                    name={iconData.name} 
+                    size={28} 
+                    color={iconData.color} 
+                    style={styles.forecastIcon}
+                  />
+                  <View style={styles.forecastTemps}>
+                    <Text style={styles.forecastHigh}>{day.high}°</Text>
+                    <Text style={styles.forecastLow}>{day.low}°</Text>
                   </View>
-                )}
-              </View>
-            );
-          })}
+                  {day.precip > 0 && (
+                    <View style={styles.precipBadge}>
+                      <Ionicons name="water" size={10} color="#3B82F6" />
+                      <Text style={styles.precipText}>{day.precip}%</Text>
+                    </View>
+                  )}
+                </View>
+              );
+            })
+          )}
         </ScrollView>
 
         {/* Dam Release Schedule Section */}
@@ -199,9 +383,11 @@ export default function ForecastScreen() {
 
         {/* Update Indicator */}
         <View style={styles.updateIndicator}>
-          <View style={styles.statusDot} />
+          <View style={[styles.statusDot, { backgroundColor: data.error ? '#EF4444' : '#10B981' }]} />
           <Text style={styles.updateText}>
-            Weather data • OpenWeatherMap
+            {data.error 
+              ? 'Weather connection error'
+              : 'Weather data • Open-Meteo'}
           </Text>
         </View>
 
@@ -247,6 +433,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2D2D2D',
     marginBottom: 24,
+    minHeight: 220,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 180,
+    gap: 12,
+  },
+  loadingText: {
+    color: '#6B7280',
+    fontSize: 14,
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  errorSubtext: {
+    color: '#6B7280',
+    fontSize: 12,
   },
   weatherMain: {
     alignItems: 'center',
@@ -317,6 +524,12 @@ const styles = StyleSheet.create({
   forecastScroll: {
     paddingRight: 16,
     gap: 12,
+  },
+  forecastLoadingContainer: {
+    width: 300,
+    height: 150,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   forecastCard: {
     backgroundColor: '#1E1E1E',
@@ -426,11 +639,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1E1E',
     zIndex: 1,
   },
-  loadingText: {
-    color: '#6B7280',
-    fontSize: 14,
-    marginTop: 12,
-  },
   webView: {
     flex: 1,
     backgroundColor: '#1E1E1E',
@@ -445,7 +653,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#10B981',
     marginRight: 8,
   },
   updateText: {
