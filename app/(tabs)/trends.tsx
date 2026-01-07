@@ -135,15 +135,15 @@ export default function TrendsScreen() {
         <View style={styles.legend}>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
-            <Text style={styles.legendText}>Low</Text>
+            <Text style={styles.legendText}>Low (&gt;350)</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
-            <Text style={styles.legendText}>Prime</Text>
+            <Text style={styles.legendText}>Prime (350-750)</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
-            <Text style={styles.legendText}>High</Text>
+            <Text style={styles.legendText}>High (&gt;750)</Text>
           </View>
         </View>
 
