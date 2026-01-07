@@ -1,42 +1,167 @@
 import StatCard from '@/components/StatCard';
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
-import React from 'react';
-import { Dimensions, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Dimensions, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
-// Mock Data per PRD
-const MOCK_CURRENT = {
-  currentCFS: 542,
-  trend24hr: 12,
-};
+// USGS Site: 04250200 (Salmon River at Pulaski, NY)
+const USGS_SITE = '04250200';
+const USGS_IV_BASE = 'https://waterservices.usgs.gov/nwis/iv/?format=json';
+const USGS_DV_BASE = 'https://waterservices.usgs.gov/nwis/dv/?format=json';
 
-const MOCK_TREND = [
-  { day: 'Mon', cfs: 420 },
-  { day: 'Tue', cfs: 380 },
-  { day: 'Wed', cfs: 520 },
-  { day: 'Thu', cfs: 680 },
-  { day: 'Fri', cfs: 590 },
-  { day: 'Sat', cfs: 542 },
-  { day: 'Sun', cfs: 510 },
-];
-
-// Calculate stats from mock data
-const avgFlow = Math.round(MOCK_TREND.reduce((sum, d) => sum + d.cfs, 0) / MOCK_TREND.length);
-const peakFlow = Math.max(...MOCK_TREND.map(d => d.cfs));
-const lowestFlow = Math.min(...MOCK_TREND.map(d => d.cfs));
-const daysInPrime = MOCK_TREND.filter(d => d.cfs >= 350 && d.cfs <= 750).length;
+// Prime zone thresholds
+const PRIME_ZONE_MIN = 350;
+const PRIME_ZONE_MAX = 750;
 
 // Chart scaling - bars scale to 800, anything above just maxes out
 const CHART_SCALE = 800;
 const CHART_HEIGHT = 180;
-const PRIME_ZONE_MIN = 350;
-const PRIME_ZONE_MAX = 750;
+
+interface DailyData {
+  day: string; // Day name (Mon, Tue, etc.)
+  date: string; // Full date for tooltip
+  cfs: number; // Daily mean CFS
+}
+
+interface TrendsData {
+  dailyData: DailyData[];
+  currentCFS: number;
+  trend24hr: number | null; // percentage change
+  isLoading: boolean;
+  error: string | null;
+  lastUpdated: Date;
+}
+
+const DEFAULT_STATE: TrendsData = {
+  dailyData: [],
+  currentCFS: 0,
+  trend24hr: null,
+  isLoading: true,
+  error: null,
+  lastUpdated: new Date(),
+};
+
+// Format day name from date
+const getDayName = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { weekday: 'short' });
+};
+
+// Format date for tooltip
+const formatDate = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
 
 export default function TrendsScreen() {
-  const trendColor = MOCK_CURRENT.trend24hr > 0 ? '#10B981' : '#EF4444';
-  const trendIcon = MOCK_CURRENT.trend24hr > 0 ? 'arrow-up' : 'arrow-down';
+  const [data, setData] = useState<TrendsData>(DEFAULT_STATE);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchTrendsData = useCallback(async () => {
+    try {
+      // Fetch daily values for past 7 days (completed days only)
+      // Also fetch current instantaneous value + 24hr history for trend
+      const dailyUrl = `${USGS_DV_BASE}&sites=${USGS_SITE}&parameterCd=00060&period=P7D`;
+      const currentUrl = `${USGS_IV_BASE}&sites=${USGS_SITE}&parameterCd=00060`;
+      const historyUrl = `${USGS_IV_BASE}&sites=${USGS_SITE}&parameterCd=00060&period=P1D`;
+
+      const [dailyRes, currentRes, historyRes] = await Promise.all([
+        fetch(dailyUrl),
+        fetch(currentUrl),
+        fetch(historyUrl),
+      ]);
+
+      if (!dailyRes.ok || !currentRes.ok) {
+        throw new Error('Failed to fetch USGS data');
+      }
+
+      const dailyJson = await dailyRes.json();
+      const currentJson = await currentRes.json();
+      const historyJson = historyRes.ok ? await historyRes.json() : null;
+
+      // Parse daily values
+      const dailyTimeSeries = dailyJson?.value?.timeSeries?.[0]?.values?.[0]?.value || [];
+      const dailyData: DailyData[] = dailyTimeSeries.map((item: { dateTime: string; value: string }) => ({
+        day: getDayName(item.dateTime),
+        date: formatDate(item.dateTime),
+        cfs: Math.round(parseFloat(item.value)),
+      }));
+
+      // Parse current flow
+      let currentCFS = 0;
+      let lastUpdated = new Date();
+      const currentTimeSeries = currentJson?.value?.timeSeries || [];
+      for (const series of currentTimeSeries) {
+        const paramCode = series?.variable?.variableCode?.[0]?.value;
+        const values = series?.values?.[0]?.value || [];
+        const latestValue = values[values.length - 1];
+        if (latestValue && paramCode === '00060') {
+          currentCFS = Math.round(parseFloat(latestValue.value));
+          lastUpdated = new Date(latestValue.dateTime);
+        }
+      }
+
+      // Calculate 24hr trend percentage
+      let trend24hr: number | null = null;
+      if (historyJson?.value?.timeSeries?.[0]?.values?.[0]?.value) {
+        const historyValues = historyJson.value.timeSeries[0].values[0].value;
+        if (historyValues.length >= 2) {
+          const oldestValue = parseFloat(historyValues[0].value);
+          const newestValue = parseFloat(historyValues[historyValues.length - 1].value);
+          if (oldestValue > 0) {
+            trend24hr = Math.round(((newestValue - oldestValue) / oldestValue) * 100);
+          }
+        }
+      }
+
+      setData({
+        dailyData,
+        currentCFS,
+        trend24hr,
+        isLoading: false,
+        error: null,
+        lastUpdated,
+      });
+
+    } catch (err) {
+      console.error('Error fetching trends data:', err);
+      setData(prev => ({
+        ...prev,
+        isLoading: false,
+        error: err instanceof Error ? err.message : 'Unknown error',
+      }));
+    }
+  }, []);
+
+  // Fetch on mount
+  useEffect(() => {
+    fetchTrendsData();
+  }, [fetchTrendsData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchTrendsData();
+    setRefreshing(false);
+  }, [fetchTrendsData]);
+
+  // Calculate stats from daily data
+  const avgFlow = data.dailyData.length > 0
+    ? Math.round(data.dailyData.reduce((sum, d) => sum + d.cfs, 0) / data.dailyData.length)
+    : 0;
+  const peakFlow = data.dailyData.length > 0
+    ? Math.max(...data.dailyData.map(d => d.cfs))
+    : 0;
+  const lowestFlow = data.dailyData.length > 0
+    ? Math.min(...data.dailyData.map(d => d.cfs))
+    : 0;
+  const daysInPrime = data.dailyData.filter(d => d.cfs >= PRIME_ZONE_MIN && d.cfs <= PRIME_ZONE_MAX).length;
+
+  // Trend display
+  const hasTrend = data.trend24hr !== null;
+  const trendColor = hasTrend && data.trend24hr! > 0 ? '#EF4444' : hasTrend && data.trend24hr! < 0 ? '#10B981' : '#6B7280';
+  const trendIcon = hasTrend && data.trend24hr! >= 0 ? 'arrow-up' : 'arrow-down';
   
   return (
     <SafeAreaView style={styles.container}>
@@ -45,6 +170,13 @@ export default function TrendsScreen() {
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            tintColor="#10B981"
+          />
+        }
       >
         {/* Header with current flow badge */}
         <View style={styles.header}>
@@ -55,89 +187,116 @@ export default function TrendsScreen() {
           
           {/* Current Flow Badge */}
           <View style={styles.flowBadge}>
-            <Text style={styles.flowBadgeValue}>{MOCK_CURRENT.currentCFS}</Text>
-            <Text style={styles.flowBadgeUnit}>CFS</Text>
-            <View style={[styles.trendBadge, { backgroundColor: trendColor + '20' }]}>
-              <Ionicons name={trendIcon} size={12} color={trendColor} />
-              <Text style={[styles.trendBadgeText, { color: trendColor }]}>
-                {MOCK_CURRENT.trend24hr}%
-              </Text>
-            </View>
+            {data.isLoading ? (
+              <ActivityIndicator size="small" color="#10B981" />
+            ) : (
+              <>
+                <Text style={styles.flowBadgeValue}>{data.currentCFS}</Text>
+                <Text style={styles.flowBadgeUnit}>CFS</Text>
+                {hasTrend && (
+                  <View style={[styles.trendBadge, { backgroundColor: trendColor + '20' }]}>
+                    <Ionicons name={trendIcon} size={12} color={trendColor} />
+                    <Text style={[styles.trendBadgeText, { color: trendColor }]}>
+                      {Math.abs(data.trend24hr!)}%
+                    </Text>
+                  </View>
+                )}
+              </>
+            )}
           </View>
         </View>
 
         {/* Chart Card */}
         <View style={styles.chartCard}>
-          {/* Prime Zone Indicator */}
-          <View style={styles.primeZoneContainer}>
-            <View style={styles.primeZoneLine} />
-            <View style={styles.primeZoneLabelBg}>
-              <Text style={styles.primeZoneLabel}>PRIME ZONE</Text>
+          {data.isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#10B981" />
+              <Text style={styles.loadingText}>Loading trend data...</Text>
             </View>
-          </View>
-          
-          {/* Chart Area with Bars */}
-          <View style={styles.chartArea}>
-            {MOCK_TREND.map((item, index) => {
-              // Bar scales to 800, caps at top if higher (blowout days just max out)
-              const rawHeight = (item.cfs / CHART_SCALE) * CHART_HEIGHT;
-              const barHeight = Math.min(rawHeight, CHART_HEIGHT); // Cap at chart height
-              const isPrime = item.cfs >= PRIME_ZONE_MIN && item.cfs <= PRIME_ZONE_MAX;
-              const barColor = isPrime ? '#10B981' : (item.cfs > PRIME_ZONE_MAX ? '#F59E0B' : '#3B82F6');
-              
-              return (
-                <View key={item.day} style={styles.barContainer}>
-                  <View style={styles.barWrapper}>
-                    {/* Value on hover area */}
-                    <View style={[styles.valueTooltip, { bottom: barHeight + 8 }]}>
-                      <Text style={styles.valueTooltipText}>{item.cfs}</Text>
-                    </View>
-                    
-                    {/* Bar */}
-                    <View 
-                      style={[
-                        styles.bar, 
-                        { 
-                          height: barHeight, 
-                          backgroundColor: barColor,
-                          shadowColor: barColor,
-                        }
-                      ]} 
-                    />
-                    
-                    {/* Glow effect */}
-                    <View 
-                      style={[
-                        styles.barGlow, 
-                        { 
-                          height: barHeight * 0.6, 
-                          backgroundColor: barColor,
-                        }
-                      ]} 
-                    />
-                  </View>
-                  
-                  {/* Day label */}
-                  <Text style={styles.dayLabel}>{item.day}</Text>
+          ) : data.error ? (
+            <View style={styles.loadingContainer}>
+              <Ionicons name="cloud-offline" size={48} color="#EF4444" />
+              <Text style={styles.errorText}>Failed to load data</Text>
+              <Text style={styles.errorSubtext}>Pull down to retry</Text>
+            </View>
+          ) : data.dailyData.length === 0 ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>No data available</Text>
+            </View>
+          ) : (
+            <>
+              {/* Prime Zone Indicator */}
+              <View style={styles.primeZoneContainer}>
+                <View style={styles.primeZoneLine} />
+                <View style={styles.primeZoneLabelBg}>
+                  <Text style={styles.primeZoneLabel}>PRIME ZONE</Text>
                 </View>
-              );
-            })}
-          </View>
-          
-          {/* Y-Axis labels */}
-          <View style={styles.yAxisLabels}>
-            <Text style={styles.axisLabel}>800+</Text>
-            <Text style={styles.axisLabel}>600</Text>
-            <Text style={styles.axisLabel}>400</Text>
-            <Text style={styles.axisLabel}>0</Text>
-          </View>
+              </View>
+              
+              {/* Chart Area with Bars */}
+              <View style={styles.chartArea}>
+                {data.dailyData.map((item, index) => {
+                  // Bar scales to 800, caps at top if higher (blowout days just max out)
+                  const rawHeight = (item.cfs / CHART_SCALE) * CHART_HEIGHT;
+                  const barHeight = Math.min(rawHeight, CHART_HEIGHT); // Cap at chart height
+                  const isPrime = item.cfs >= PRIME_ZONE_MIN && item.cfs <= PRIME_ZONE_MAX;
+                  const barColor = isPrime ? '#10B981' : (item.cfs > PRIME_ZONE_MAX ? '#F59E0B' : '#3B82F6');
+                  
+                  return (
+                    <View key={`${item.day}-${index}`} style={styles.barContainer}>
+                      <View style={styles.barWrapper}>
+                        {/* Value tooltip */}
+                        <View style={[styles.valueTooltip, { bottom: barHeight + 8 }]}>
+                          <Text style={styles.valueTooltipText}>{item.cfs}</Text>
+                        </View>
+                        
+                        {/* Bar */}
+                        <View 
+                          style={[
+                            styles.bar, 
+                            { 
+                              height: barHeight, 
+                              backgroundColor: barColor,
+                              shadowColor: barColor,
+                            }
+                          ]} 
+                        />
+                        
+                        {/* Glow effect */}
+                        <View 
+                          style={[
+                            styles.barGlow, 
+                            { 
+                              height: barHeight * 0.6, 
+                              backgroundColor: barColor,
+                            }
+                          ]} 
+                        />
+                      </View>
+                      
+                      {/* Day label */}
+                      <Text style={styles.dayLabel}>{item.day}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+              
+              {/* Y-Axis labels */}
+              <View style={styles.yAxisLabels}>
+                <Text style={styles.axisLabel}>800+</Text>
+                <Text style={styles.axisLabel}>600</Text>
+                <Text style={styles.axisLabel}>400</Text>
+                <Text style={styles.axisLabel}>0</Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Legend */}
         <View style={styles.legend}>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
-            <Text style={styles.legendText}>Low (&gt;350)</Text>
+            <Text style={styles.legendText}>Low (&lt;350)</Text>
           </View>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
@@ -154,12 +313,12 @@ export default function TrendsScreen() {
           <View style={styles.statsRow}>
             <StatCard
               icon="analytics"
-              value={`${avgFlow}`}
+              value={data.isLoading ? '--' : `${avgFlow}`}
               label="Avg Flow (CFS)"
             />
             <StatCard
               icon="arrow-up-circle"
-              value={`${peakFlow}`}
+              value={data.isLoading ? '--' : `${peakFlow}`}
               label="Peak Flow (CFS)"
               valueColor="#F59E0B"
             />
@@ -167,13 +326,13 @@ export default function TrendsScreen() {
           <View style={styles.statsRow}>
             <StatCard
               icon="arrow-down-circle"
-              value={`${lowestFlow}`}
+              value={data.isLoading ? '--' : `${lowestFlow}`}
               label="Lowest (CFS)"
               valueColor="#3B82F6"
             />
             <StatCard
               icon="fish"
-              value={`${daysInPrime}`}
+              value={data.isLoading ? '--' : `${daysInPrime}`}
               label="Days in Prime"
               valueColor="#10B981"
             />
@@ -182,9 +341,11 @@ export default function TrendsScreen() {
 
         {/* Update Indicator */}
         <View style={styles.updateIndicator}>
-          <View style={styles.statusDot} />
+          <View style={[styles.statusDot, { backgroundColor: data.error ? '#EF4444' : '#10B981' }]} />
           <Text style={styles.updateText}>
-            Last 7 days • USGS 04250200
+            {data.error 
+              ? 'Connection error' 
+              : `Last ${data.dailyData.length} days • USGS ${USGS_SITE}`}
           </Text>
         </View>
 
@@ -231,6 +392,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#2D2D2D',
+    minWidth: 80,
+    justifyContent: 'center',
   },
   flowBadgeValue: {
     color: '#FFFFFF',
@@ -264,6 +427,27 @@ const styles = StyleSheet.create({
     borderColor: '#2D2D2D',
     marginBottom: 16,
     position: 'relative',
+    minHeight: 280,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 200,
+    gap: 12,
+  },
+  loadingText: {
+    color: '#6B7280',
+    fontSize: 14,
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  errorSubtext: {
+    color: '#6B7280',
+    fontSize: 12,
   },
   primeZoneContainer: {
     position: 'absolute',
@@ -393,7 +577,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#10B981',
     marginRight: 8,
   },
   updateText: {
