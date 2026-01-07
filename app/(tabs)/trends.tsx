@@ -28,11 +28,14 @@ const peakFlow = Math.max(...MOCK_TREND.map(d => d.cfs));
 const lowestFlow = Math.min(...MOCK_TREND.map(d => d.cfs));
 const daysInPrime = MOCK_TREND.filter(d => d.cfs >= 350 && d.cfs <= 750).length;
 
-// Find max for chart scaling
-const maxCFS = Math.max(...MOCK_TREND.map(d => d.cfs));
+// Chart scaling - fixed 2000 CFS max covers 99% of scenarios
+const CHART_MAX = 2000;
 const CHART_HEIGHT = 180;
 const PRIME_ZONE_MIN = 350;
 const PRIME_ZONE_MAX = 750;
+
+// Dynamic Y-axis ticks based on chart max
+const yAxisTicks = [CHART_MAX, 1500, 1000, 500, 0];
 
 export default function TrendsScreen() {
   const trendColor = MOCK_CURRENT.trend24hr > 0 ? '#10B981' : '#EF4444';
@@ -79,7 +82,7 @@ export default function TrendsScreen() {
           {/* Chart Area with Bars */}
           <View style={styles.chartArea}>
             {MOCK_TREND.map((item, index) => {
-              const barHeight = (item.cfs / (maxCFS + 100)) * CHART_HEIGHT;
+              const barHeight = (item.cfs / CHART_MAX) * CHART_HEIGHT;
               const isPrime = item.cfs >= PRIME_ZONE_MIN && item.cfs <= PRIME_ZONE_MAX;
               const barColor = isPrime ? '#10B981' : (item.cfs > PRIME_ZONE_MAX ? '#F59E0B' : '#3B82F6');
               
@@ -122,12 +125,11 @@ export default function TrendsScreen() {
             })}
           </View>
           
-          {/* Y-Axis labels */}
+          {/* Y-Axis labels - dynamic based on chart max */}
           <View style={styles.yAxisLabels}>
-            <Text style={styles.axisLabel}>{maxCFS + 100}</Text>
-            <Text style={styles.axisLabel}>750</Text>
-            <Text style={styles.axisLabel}>350</Text>
-            <Text style={styles.axisLabel}>0</Text>
+            {yAxisTicks.map((tick) => (
+              <Text key={tick} style={styles.axisLabel}>{tick}</Text>
+            ))}
           </View>
         </View>
 
