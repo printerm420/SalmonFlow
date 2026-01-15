@@ -1,38 +1,71 @@
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
-import React from 'react';
-// import { useState } from 'react';  // Uncomment when notifications are ready
+import React, { useState } from 'react';
 import {
   Linking,
-  // Modal,  // Uncomment when notifications are ready
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  // Switch,  // Uncomment when notifications are ready
+  Switch,
   Text,
   View,
+  Alert,
 } from 'react-native';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { CustomPaywall, RevenueCatPaywall } from '@/components/Paywall';
+import { 
+  CustomSubscriptionManager, 
+  RevenueCatCustomerCenter 
+} from '@/components/CustomerCenter';
 
 const APP_VERSION = '1.0.0';
 
 export default function SettingsScreen() {
-  // Uncomment when notifications are ready:
-  // const [primeAlertEnabled, setPrimeAlertEnabled] = useState(false);
-  // const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const { isPro, subscriptionType, expirationDate, isLoading } = useSubscription();
+  
+  // Paywall & Customer Center state
+  const [showPaywall, setShowPaywall] = useState(false);
+  const [showCustomerCenter, setShowCustomerCenter] = useState(false);
+  
+  // Notification settings (requires Pro)
+  const [primeAlertEnabled, setPrimeAlertEnabled] = useState(false);
 
-  // const handlePrimeAlertToggle = (value: boolean) => {
-  //   if (value) {
-  //     setShowPremiumModal(true);
-  //   } else {
-  //     setPrimeAlertEnabled(false);
-  //   }
-  // };
+  const handlePrimeAlertToggle = (value: boolean) => {
+    if (value && !isPro) {
+      // Show paywall if user tries to enable Pro feature
+      setShowPaywall(true);
+    } else {
+      setPrimeAlertEnabled(value);
+    }
+  };
 
-  // const closePremiumModal = () => {
-  //   setShowPremiumModal(false);
-  //   setPrimeAlertEnabled(false);
-  // };
+  const handleSubscriptionPress = () => {
+    if (isPro) {
+      setShowCustomerCenter(true);
+    } else {
+      setShowPaywall(true);
+    }
+  };
+
+  const formatExpirationDate = () => {
+    if (!expirationDate) return null;
+    return expirationDate.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const getSubscriptionLabel = () => {
+    if (!isPro) return 'Free Plan';
+    switch (subscriptionType) {
+      case 'monthly': return 'Monthly';
+      case 'yearly': return 'Yearly';
+      case 'lifetime': return 'Lifetime';
+      default: return 'Pro';
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -49,17 +82,68 @@ export default function SettingsScreen() {
           <Text style={styles.headerTitle}>Settings</Text>
         </View>
 
-        {/* Alerts Section - Commented out until notifications are ready
+        {/* Subscription Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Ionicons name="notifications" size={18} color="#10B981" />
+            <Ionicons name="diamond" size={18} color="#10B981" />
+            <Text style={styles.sectionTitle}>Subscription</Text>
+          </View>
+
+          <Pressable 
+            style={[styles.card, isPro && styles.cardPro]} 
+            onPress={handleSubscriptionPress}
+          >
+            <View style={styles.subscriptionRow}>
+              <View style={styles.subscriptionIconContainer}>
+                <Ionicons 
+                  name={isPro ? 'diamond' : 'diamond-outline'} 
+                  size={24} 
+                  color={isPro ? '#10B981' : '#6B7280'} 
+                />
+              </View>
+              <View style={styles.subscriptionInfo}>
+                <View style={styles.subscriptionHeader}>
+                  <Text style={styles.subscriptionTitle}>
+                    {isPro ? 'SalmonFlow Pro' : 'Upgrade to Pro'}
+                  </Text>
+                  {isPro && (
+                    <View style={styles.activeBadge}>
+                      <View style={styles.activeDot} />
+                      <Text style={styles.activeText}>Active</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.subscriptionDescription}>
+                  {isPro 
+                    ? `${getSubscriptionLabel()}${subscriptionType !== 'lifetime' && expirationDate ? ` • Renews ${formatExpirationDate()}` : subscriptionType === 'lifetime' ? ' • Forever' : ''}`
+                    : 'Unlock alerts, analytics & more'
+                  }
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#4B5563" />
+            </View>
+          </Pressable>
+        </View>
+
+        {/* Notifications Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="notifications" size={18} color="#F59E0B" />
             <Text style={styles.sectionTitle}>Notifications</Text>
           </View>
 
           <View style={styles.card}>
             <View style={styles.settingRow}>
               <View style={styles.settingInfo}>
-                <Text style={styles.settingTitle}>Prime Zone Alerts</Text>
+                <View style={styles.settingTitleRow}>
+                  <Text style={styles.settingTitle}>Prime Zone Alerts</Text>
+                  {!isPro && (
+                    <View style={styles.proBadge}>
+                      <Ionicons name="diamond" size={10} color="#10B981" />
+                      <Text style={styles.proBadgeText}>PRO</Text>
+                    </View>
+                  )}
+                </View>
                 <Text style={styles.settingDescription}>
                   Get notified when flow enters the prime fishing zone (350-750 CFS)
                 </Text>
@@ -87,7 +171,6 @@ export default function SettingsScreen() {
             </View>
           </View>
         </View>
-        */}
 
         {/* Preferences Section */}
         <View style={styles.section}>
@@ -205,48 +288,20 @@ export default function SettingsScreen() {
 
       </ScrollView>
 
-      {/* Premium Modal - Uncomment when notifications are ready
-      <Modal
-        visible={showPremiumModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={closePremiumModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalIcon}>
-              <Ionicons name="diamond" size={40} color="#10B981" />
-            </View>
-            
-            <Text style={styles.modalTitle}>Premium Feature</Text>
-            <Text style={styles.modalDescription}>
-              Push notifications for prime fishing conditions require a premium subscription.
-            </Text>
+      {/* Paywall Modal */}
+      <CustomPaywall
+        visible={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        onSuccess={() => {
+          Alert.alert('Welcome to Pro!', 'You now have access to all premium features.');
+        }}
+      />
 
-            <View style={styles.modalFeatures}>
-              <View style={styles.modalFeatureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#10B981" />
-                <Text style={styles.modalFeatureText}>Real-time flow alerts</Text>
-              </View>
-              <View style={styles.modalFeatureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#10B981" />
-                <Text style={styles.modalFeatureText}>Prime zone notifications</Text>
-              </View>
-              <View style={styles.modalFeatureRow}>
-                <Ionicons name="checkmark-circle" size={18} color="#10B981" />
-                <Text style={styles.modalFeatureText}>Daily condition summaries</Text>
-              </View>
-            </View>
-
-            <Pressable style={styles.modalButton} onPress={closePremiumModal}>
-              <Text style={styles.modalButtonText}>Maybe Later</Text>
-            </Pressable>
-
-            <Text style={styles.modalNote}>Premium coming soon!</Text>
-          </View>
-        </View>
-      </Modal>
-      */}
+      {/* Customer Center Modal */}
+      <CustomSubscriptionManager
+        visible={showCustomerCenter}
+        onClose={() => setShowCustomerCenter(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -298,6 +353,82 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2D2D2D',
     overflow: 'hidden',
+  },
+  cardPro: {
+    borderColor: '#10B98130',
+    backgroundColor: '#10B98108',
+  },
+  subscriptionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  subscriptionIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    backgroundColor: '#2D2D2D',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  subscriptionInfo: {
+    flex: 1,
+  },
+  subscriptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  subscriptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginRight: 8,
+  },
+  subscriptionDescription: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  activeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10B98120',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+    marginRight: 5,
+  },
+  activeText: {
+    color: '#10B981',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  settingTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  proBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10B98120',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  proBadgeText: {
+    color: '#10B981',
+    fontSize: 9,
+    fontWeight: '700',
+    marginLeft: 3,
   },
   settingRow: {
     flexDirection: 'row',
