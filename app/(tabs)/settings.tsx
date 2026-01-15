@@ -1,71 +1,70 @@
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   Linking,
   Pressable,
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   View,
-  Alert,
 } from 'react-native';
-import { useSubscription } from '@/contexts/SubscriptionContext';
-import { CustomPaywall, RevenueCatPaywall } from '@/components/Paywall';
-import { 
-  CustomSubscriptionManager, 
-  RevenueCatCustomerCenter 
-} from '@/components/CustomerCenter';
+
+// Note: These imports are kept for when features are re-enabled
+// import { useState } from 'react';
+// import { Switch, Alert } from 'react-native';
+// import { useSubscription } from '@/contexts/SubscriptionContext';
+// import { CustomPaywall, RevenueCatPaywall } from '@/components/Paywall';
+// import { CustomSubscriptionManager, RevenueCatCustomerCenter } from '@/components/CustomerCenter';
 
 const APP_VERSION = '1.0.0';
 
 export default function SettingsScreen() {
-  const { isPro, subscriptionType, expirationDate, isLoading } = useSubscription();
+  // Subscription state - commented out for hard paywall
+  // const { isPro, subscriptionType, expirationDate, isLoading } = useSubscription();
   
-  // Paywall & Customer Center state
-  const [showPaywall, setShowPaywall] = useState(false);
-  const [showCustomerCenter, setShowCustomerCenter] = useState(false);
+  // Paywall & Customer Center state - commented out for hard paywall
+  // const [showPaywall, setShowPaywall] = useState(false);
+  // const [showCustomerCenter, setShowCustomerCenter] = useState(false);
   
-  // Notification settings (requires Pro)
-  const [primeAlertEnabled, setPrimeAlertEnabled] = useState(false);
+  // Notification settings - commented out for hard paywall
+  // const [primeAlertEnabled, setPrimeAlertEnabled] = useState(false);
 
-  const handlePrimeAlertToggle = (value: boolean) => {
-    if (value && !isPro) {
-      // Show paywall if user tries to enable Pro feature
-      setShowPaywall(true);
-    } else {
-      setPrimeAlertEnabled(value);
-    }
-  };
+  // const handlePrimeAlertToggle = (value: boolean) => {
+  //   if (value && !isPro) {
+  //     setShowPaywall(true);
+  //   } else {
+  //     setPrimeAlertEnabled(value);
+  //   }
+  // };
 
-  const handleSubscriptionPress = () => {
-    if (isPro) {
-      setShowCustomerCenter(true);
-    } else {
-      setShowPaywall(true);
-    }
-  };
+  // const handleSubscriptionPress = () => {
+  //   if (isPro) {
+  //     setShowCustomerCenter(true);
+  //   } else {
+  //     setShowPaywall(true);
+  //   }
+  // };
 
-  const formatExpirationDate = () => {
-    if (!expirationDate) return null;
-    return expirationDate.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
+  // const formatExpirationDate = () => {
+  //   if (!expirationDate) return null;
+  //   return expirationDate.toLocaleDateString('en-US', {
+  //     month: 'short',
+  //     day: 'numeric',
+  //     year: 'numeric',
+  //   });
+  // };
 
-  const getSubscriptionLabel = () => {
-    if (!isPro) return 'Free Plan';
-    switch (subscriptionType) {
-      case 'monthly': return 'Monthly';
-      case 'yearly': return 'Yearly';
-      case 'lifetime': return 'Lifetime';
-      default: return 'Pro';
-    }
-  };
+  // const getSubscriptionLabel = () => {
+  //   if (!isPro) return 'Free Plan';
+  //   switch (subscriptionType) {
+  //     case 'monthly': return 'Monthly';
+  //     case 'yearly': return 'Yearly';
+  //     case 'lifetime': return 'Lifetime';
+  //     default: return 'Pro';
+  //   }
+  // };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -82,7 +81,7 @@ export default function SettingsScreen() {
           <Text style={styles.headerTitle}>Settings</Text>
         </View>
 
-        {/* Subscription Section */}
+        {/* Subscription Section - Commented out for hard paywall
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="diamond" size={18} color="#10B981" />
@@ -124,8 +123,9 @@ export default function SettingsScreen() {
             </View>
           </Pressable>
         </View>
+        */}
 
-        {/* Notifications Section */}
+        {/* Notifications Section - Commented out for hard paywall
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Ionicons name="notifications" size={18} color="#F59E0B" />
@@ -171,6 +171,7 @@ export default function SettingsScreen() {
             </View>
           </View>
         </View>
+        */}
 
         {/* Preferences Section */}
         <View style={styles.section}>
@@ -288,7 +289,7 @@ export default function SettingsScreen() {
 
       </ScrollView>
 
-      {/* Paywall Modal */}
+      {/* Paywall Modal - Commented out for hard paywall
       <CustomPaywall
         visible={showPaywall}
         onClose={() => setShowPaywall(false)}
@@ -296,12 +297,14 @@ export default function SettingsScreen() {
           Alert.alert('Welcome to Pro!', 'You now have access to all premium features.');
         }}
       />
+      */}
 
-      {/* Customer Center Modal */}
+      {/* Customer Center Modal - Commented out for hard paywall
       <CustomSubscriptionManager
         visible={showCustomerCenter}
         onClose={() => setShowCustomerCenter(false)}
       />
+      */}
     </SafeAreaView>
   );
 }

@@ -42,6 +42,9 @@ interface SubscriptionState {
   managementURL: string | null;
   subscriptionType: 'monthly' | 'yearly' | 'lifetime' | null;
   
+  // Sandbox detection (for App Store review)
+  isSandbox: boolean;
+  
   // Actions
   refreshCustomerInfo: () => Promise<void>;
   purchase: (pkg: PurchasesPackage) => Promise<boolean>;
@@ -58,6 +61,7 @@ const defaultState: SubscriptionState = {
   expirationDate: null,
   managementURL: null,
   subscriptionType: null,
+  isSandbox: false,
   refreshCustomerInfo: async () => {},
   purchase: async () => false,
   restore: async () => false,
@@ -104,6 +108,15 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     if (productId.includes('lifetime')) return 'lifetime';
     
     return null;
+  }, [customerInfo]);
+
+  // Detect sandbox mode (App Store review uses sandbox)
+  // This allows showing a close button ONLY during App Store review
+  const isSandbox = useMemo(() => {
+    if (!customerInfo) return false;
+    // Check if any active entitlement is from sandbox
+    const activeEntitlements = Object.values(customerInfo.entitlements.active);
+    return activeEntitlements.some(ent => ent.isSandbox);
   }, [customerInfo]);
 
   // Initialize RevenueCat on mount
@@ -225,6 +238,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     expirationDate,
     managementURL,
     subscriptionType,
+    isSandbox,
     refreshCustomerInfo,
     purchase,
     restore,
@@ -238,6 +252,7 @@ export function SubscriptionProvider({ children }: SubscriptionProviderProps) {
     expirationDate,
     managementURL,
     subscriptionType,
+    isSandbox,
     refreshCustomerInfo,
     purchase,
     restore,
