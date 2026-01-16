@@ -2,30 +2,26 @@
  * Hard Paywall Component
  * 
  * A mandatory paywall that blocks access to the app until the user subscribes.
- * Shows on app launch and cannot be dismissed by regular users.
- * 
- * For App Store Review:
- * - Detects sandbox mode (used during App Store review)
- * - Shows a close button ONLY in sandbox mode so reviewers can access the app
- * - Regular production users cannot dismiss this paywall
+ * Close button visibility is controlled remotely via RevenueCat offering metadata.
+ * Set "show_close_button": true/false in RevenueCat dashboard to toggle.
  */
 
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { usePackages, useSubscription } from '@/contexts/SubscriptionContext';
+import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
   ActivityIndicator,
   Alert,
-  ScrollView,
   Dimensions,
-  StatusBar,
   Platform,
+  Pressable,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { PurchasesPackage } from 'react-native-purchases';
-import { useSubscription, usePackages } from '@/contexts/SubscriptionContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -36,19 +32,18 @@ interface HardPaywallProps {
   onSubscribed?: () => void;
   
   /**
-   * Called when sandbox user (App Store reviewer) dismisses paywall
+   * Called when user dismisses paywall (only available when close button is shown)
    */
-  onSandboxDismiss?: () => void;
+  onDismiss?: () => void;
 }
 
-export function HardPaywall({ onSubscribed, onSandboxDismiss }: HardPaywallProps) {
+export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
   const { 
     purchase, 
     restore, 
     isLoading, 
     error, 
     isPro,
-    isSandbox,
     isInitialized,
     currentOffering,
   } = useSubscription();
@@ -63,9 +58,6 @@ export function HardPaywall({ onSubscribed, onSandboxDismiss }: HardPaywallProps
     // Always show in development for testing
     if (__DEV__) return true;
     
-    // Always show for sandbox users (App Store reviewers who made a purchase)
-    if (isSandbox) return true;
-    
     // Check RevenueCat offering metadata for remote control
     // This allows toggling the X button from RevenueCat dashboard without an app update
     const metadata = currentOffering?.metadata as { show_close_button?: boolean } | undefined;
@@ -75,7 +67,7 @@ export function HardPaywall({ onSubscribed, onSandboxDismiss }: HardPaywallProps
     
     // Default: no close button (hard paywall for production users)
     return false;
-  }, [isSandbox, currentOffering]);
+  }, [currentOffering]);
 
   // If user becomes Pro, call the success callback
   useEffect(() => {
@@ -135,19 +127,10 @@ export function HardPaywall({ onSubscribed, onSandboxDismiss }: HardPaywallProps
     }
   }, [restore, onSubscribed]);
 
-  const handleSandboxDismiss = useCallback(() => {
-    Alert.alert(
-      'Reviewer Access',
-      'You are accessing the app in sandbox/review mode. This option is not available to regular users.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Continue to App', 
-          onPress: () => onSandboxDismiss?.(),
-        },
-      ]
-    );
-  }, [onSandboxDismiss]);
+  // Simple dismiss handler - just calls the callback
+  const handleDismiss = useCallback(() => {
+    onDismiss?.();
+  }, [onDismiss]);
 
   // Calculate savings
   const yearlySavings = React.useMemo(() => {
@@ -184,19 +167,23 @@ export function HardPaywall({ onSubscribed, onSandboxDismiss }: HardPaywallProps
     <View style={styles.container}>
       <StatusBar barStyle="light-content" />
       
+      {/* Close Button - Outside ScrollView, fixed position below status bar */}
+      {/* Controlled remotely via RevenueCat offering metadata */}
+      {showCloseButton && (
+        <Pressable 
+          style={styles.closeButton} 
+          onPress={handleDismiss}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="close" size={22} color="#9CA3AF" />
+        </Pressable>
+      )}
+      
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Close Button - Controlled remotely via RevenueCat offering metadata */}
-        {/* Set "show_close_button": true in RevenueCat dashboard to show this */}
-        {showCloseButton && (
-          <Pressable style={styles.sandboxCloseButton} onPress={handleSandboxDismiss}>
-            <Ionicons name="close" size={24} color="#6B7280" />
-          </Pressable>
-        )}
-
         {/* Hero Section */}
         <View style={styles.heroSection}>
           <View style={styles.iconContainer}>
@@ -397,18 +384,18 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
 
-  // Sandbox close button (for App Store reviewers only)
-  sandboxCloseButton: {
+  // Close button (controlled via RevenueCat metadata)
+  closeButton: {
     position: 'absolute',
-    top: 16,
-    right: 0,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    top: Platform.OS === 'ios' ? 60 : 40,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#1E1E1E',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
+    zIndex: 100,
     borderWidth: 1,
     borderColor: '#2D2D2D',
   },

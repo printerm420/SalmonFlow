@@ -17,24 +17,24 @@ export const unstable_settings = {
  */
 function RootLayoutContent() {
   const colorScheme = useColorScheme();
-  const { isPro, isInitialized, isSandbox } = useSubscription();
+  const { isPro, isInitialized } = useSubscription();
   
-  // Track if sandbox user dismissed paywall (for App Store review)
-  const [sandboxDismissed, setSandboxDismissed] = useState(false);
+  // Track if user dismissed paywall (when close button is shown via RevenueCat metadata)
+  const [dismissed, setDismissed] = useState(false);
 
-  const handleSandboxDismiss = useCallback(() => {
-    setSandboxDismissed(true);
+  const handleDismiss = useCallback(() => {
+    setDismissed(true);
   }, []);
 
   // Show hard paywall if:
   // - User is not Pro AND
-  // - User hasn't dismissed via sandbox mode (App Store reviewer)
-  const showPaywall = isInitialized && !isPro && !sandboxDismissed;
+  // - User hasn't dismissed the paywall
+  const showPaywall = isInitialized && !isPro && !dismissed;
 
   if (showPaywall) {
     return (
       <HardPaywall 
-        onSandboxDismiss={handleSandboxDismiss}
+        onDismiss={handleDismiss}
       />
     );
   }
