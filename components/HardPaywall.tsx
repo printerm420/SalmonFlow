@@ -10,7 +10,7 @@
  * - Regular production users cannot dismiss this paywall
  */
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -50,10 +50,32 @@ export function HardPaywall({ onSubscribed, onSandboxDismiss }: HardPaywallProps
     isPro,
     isSandbox,
     isInitialized,
+    currentOffering,
   } = useSubscription();
   const { monthly, yearly, lifetime } = usePackages();
   const [selectedPackage, setSelectedPackage] = useState<'monthly' | 'yearly' | 'lifetime'>('yearly');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Determine if close button should be shown
+  // Controlled remotely via RevenueCat offering metadata
+  // Set "show_close_button": true in RevenueCat dashboard to show X button
+  const showCloseButton = useMemo(() => {
+    // Always show in development for testing
+    if (__DEV__) return true;
+    
+    // Always show for sandbox users (App Store reviewers who made a purchase)
+    if (isSandbox) return true;
+    
+    // Check RevenueCat offering metadata for remote control
+    // This allows toggling the X button from RevenueCat dashboard without an app update
+    const metadata = currentOffering?.metadata as { show_close_button?: boolean } | undefined;
+    if (metadata?.show_close_button !== undefined) {
+      return metadata.show_close_button;
+    }
+    
+    // Default: no close button (hard paywall for production users)
+    return false;
+  }, [isSandbox, currentOffering]);
 
   // If user becomes Pro, call the success callback
   useEffect(() => {
@@ -167,8 +189,9 @@ export function HardPaywall({ onSubscribed, onSandboxDismiss }: HardPaywallProps
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Sandbox/Review Mode Close Button - Only visible for App Store reviewers */}
-        {isSandbox && (
+        {/* Close Button - Controlled remotely via RevenueCat offering metadata */}
+        {/* Set "show_close_button": true in RevenueCat dashboard to show this */}
+        {showCloseButton && (
           <Pressable style={styles.sandboxCloseButton} onPress={handleSandboxDismiss}>
             <Ionicons name="close" size={24} color="#6B7280" />
           </Pressable>
