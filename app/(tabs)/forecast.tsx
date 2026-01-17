@@ -12,7 +12,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { WebView } from 'react-native-webview';
+// import { WebView } from 'react-native-webview'; // COMMENTED OUT FOR V1 - Will add back in v1.1
 
 // Pulaski, NY coordinates
 const PULASKI_LAT = 43.57;
@@ -125,7 +125,7 @@ const DEFAULT_STATE: WeatherData = {
 
 export default function ForecastScreen() {
   const [data, setData] = useState<WeatherData>(DEFAULT_STATE);
-  const [webViewLoading, setWebViewLoading] = useState(true);
+  // const [webViewLoading, setWebViewLoading] = useState(true); // COMMENTED OUT FOR V1
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchWeatherData = useCallback(async () => {
@@ -347,7 +347,7 @@ export default function ForecastScreen() {
           )}
         </ScrollView>
 
-        {/* Dam Release Schedule Section */}
+        {/* Dam Release Schedule Section - COMMENTED OUT FOR V1, will add in v1.1
         <View style={styles.damSection}>
           <View style={styles.damHeader}>
             <View style={styles.damTitleRow}>
@@ -380,6 +380,7 @@ export default function ForecastScreen() {
             />
           </View>
         </View>
+        */}
 
         {/* Update Indicator */}
         <View style={styles.updateIndicator}>
