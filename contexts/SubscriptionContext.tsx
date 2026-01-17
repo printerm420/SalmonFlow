@@ -5,10 +5,10 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import Purchases, {
-  CustomerInfo,
-  LOG_LEVEL,
-  PurchasesOffering,
-  PurchasesPackage,
+    CustomerInfo,
+    LOG_LEVEL,
+    PurchasesOffering,
+    PurchasesPackage,
 } from 'react-native-purchases';
 
 // ============================================================================
@@ -90,15 +90,6 @@ const detectSandboxMode = async (customerInfo: CustomerInfo | null): Promise<boo
   for (const [key, entitlement] of Object.entries(allEntitlements)) {
     if (entitlement.isSandbox) {
       console.log(`[Sandbox] Detected via entitlement: ${key}`);
-      return true;
-    }
-  }
-
-  // Check 3: Look at non-subscription transactions for sandbox indicator
-  const nonSubscriptions = customerInfo.nonSubscriptionTransactions || [];
-  for (const transaction of nonSubscriptions) {
-    if (transaction.isSandbox) {
-      console.log('[Sandbox] Detected via non-subscription transaction');
       return true;
     }
   }
