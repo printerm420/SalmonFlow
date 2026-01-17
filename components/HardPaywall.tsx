@@ -226,7 +226,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
           <Pressable onPress={handleLogoTap} style={styles.iconContainer}>
             <FontAwesome6 name="fish-fins" size={48} color="#10B981" />
           </Pressable>
-          <Text style={styles.title}>SalmonFlow</Text>
+          <Text style={styles.title}>Pulaski Salmon</Text>
           <Text style={styles.tagline}>Salmon River at Pulaski, NY</Text>
           <Text style={styles.subtitle}>
             Your essential companion for Salmon River fishing conditions
