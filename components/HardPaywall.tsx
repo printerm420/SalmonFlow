@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -48,6 +49,10 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
   // Secret tap counter for reviewer escape hatch (tap logo 5 times)
   const [logoTapCount, setLogoTapCount] = useState(0);
   const [showReviewerEscape, setShowReviewerEscape] = useState(false);
+  
+  // Legal modals
+  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  const [showTermsOfUse, setShowTermsOfUse] = useState(false);
 
   // =========================================================================
   // X BUTTON VISIBILITY
@@ -385,15 +390,190 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
         </Text>
 
         <View style={styles.legalLinks}>
-          <Pressable>
+          <Pressable onPress={() => setShowPrivacyPolicy(true)}>
             <Text style={styles.legalLink}>Privacy Policy</Text>
           </Pressable>
           <Text style={styles.legalDivider}>•</Text>
-          <Pressable>
+          <Pressable onPress={() => setShowTermsOfUse(true)}>
             <Text style={styles.legalLink}>Terms of Use</Text>
           </Pressable>
         </View>
       </View>
+
+      {/* Privacy Policy Modal */}
+      <Modal
+        visible={showPrivacyPolicy}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPrivacyPolicy(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Privacy Policy</Text>
+            <Pressable
+              style={styles.modalCloseButton}
+              onPress={() => setShowPrivacyPolicy(false)}
+            >
+              <Ionicons name="close" size={24} color="#FFFFFF" />
+            </Pressable>
+          </View>
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            <Text style={styles.modalLastUpdated}>Last Updated: January 17, 2026</Text>
+            
+            <Text style={styles.modalSectionTitle}>1. Introduction</Text>
+            <Text style={styles.modalText}>
+              Welcome to SalmonFlow ("we," "our," or "us"). This Privacy Policy explains how we collect, use, and protect your information when you use our mobile application.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>2. Information We Collect</Text>
+            <Text style={styles.modalText}>
+              <Text style={styles.modalBold}>Usage Data:</Text> We collect anonymous usage statistics to improve the app experience, including features used and session duration.
+              {'\n\n'}
+              <Text style={styles.modalBold}>Purchase Information:</Text> When you subscribe, Apple processes your payment. We receive confirmation of your subscription status but do not have access to your payment details.
+              {'\n\n'}
+              <Text style={styles.modalBold}>Device Information:</Text> We may collect device type and operating system version for compatibility purposes.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>3. How We Use Your Information</Text>
+            <Text style={styles.modalText}>
+              • To provide and maintain our service{'\n'}
+              • To manage your subscription{'\n'}
+              • To improve app functionality{'\n'}
+              • To communicate important updates
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>4. Data Sharing</Text>
+            <Text style={styles.modalText}>
+              We do not sell, trade, or rent your personal information to third parties. We may share anonymized, aggregated data for analytics purposes.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>5. Data Sources</Text>
+            <Text style={styles.modalText}>
+              SalmonFlow displays publicly available data from:{'\n'}
+              • U.S. Geological Survey (USGS) - River flow data{'\n'}
+              • Open-Meteo - Weather information{'\n'}
+              • SafeWaters - Dam release schedules
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>6. Data Security</Text>
+            <Text style={styles.modalText}>
+              We implement appropriate security measures to protect your information. However, no method of electronic transmission is 100% secure.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>7. Children's Privacy</Text>
+            <Text style={styles.modalText}>
+              Our app is not intended for children under 13. We do not knowingly collect information from children under 13.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>8. Changes to This Policy</Text>
+            <Text style={styles.modalText}>
+              We may update this Privacy Policy periodically. We will notify you of any changes by updating the "Last Updated" date.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>9. Contact Us</Text>
+            <Text style={styles.modalText}>
+              If you have questions about this Privacy Policy, please contact us at:{'\n'}
+              support@salmonflow.app
+            </Text>
+
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Terms of Use Modal */}
+      <Modal
+        visible={showTermsOfUse}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowTermsOfUse(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Terms of Use</Text>
+            <Pressable
+              style={styles.modalCloseButton}
+              onPress={() => setShowTermsOfUse(false)}
+            >
+              <Ionicons name="close" size={24} color="#FFFFFF" />
+            </Pressable>
+          </View>
+          <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+            <Text style={styles.modalLastUpdated}>Last Updated: January 17, 2026</Text>
+            
+            <Text style={styles.modalSectionTitle}>1. Acceptance of Terms</Text>
+            <Text style={styles.modalText}>
+              By downloading, installing, or using SalmonFlow, you agree to be bound by these Terms of Use. If you do not agree, please do not use the app.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>2. Description of Service</Text>
+            <Text style={styles.modalText}>
+              SalmonFlow provides real-time fishing conditions data for the Salmon River at Pulaski, NY, including flow rates, weather information, and related fishing analytics.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>3. Subscription Terms</Text>
+            <Text style={styles.modalText}>
+              <Text style={styles.modalBold}>Auto-Renewal:</Text> Subscriptions automatically renew unless cancelled at least 24 hours before the end of the current period.
+              {'\n\n'}
+              <Text style={styles.modalBold}>Payment:</Text> Payment will be charged to your Apple ID account at confirmation of purchase.
+              {'\n\n'}
+              <Text style={styles.modalBold}>Cancellation:</Text> You can manage and cancel your subscription in your Apple ID Account Settings.
+              {'\n\n'}
+              <Text style={styles.modalBold}>Refunds:</Text> Refunds are handled by Apple according to their refund policies.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>4. Disclaimer of Warranties</Text>
+            <Text style={styles.modalText}>
+              THE APP IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. We do not guarantee the accuracy, completeness, or timeliness of any data displayed.
+              {'\n\n'}
+              Flow data is sourced from USGS and may be delayed or unavailable. Weather data is provided by third-party services.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>5. Limitation of Liability</Text>
+            <Text style={styles.modalText}>
+              SalmonFlow shall not be liable for any decisions made based on information provided by the app. Always exercise caution and check official sources before fishing.
+              {'\n\n'}
+              We are not responsible for:{'\n'}
+              • Accuracy of river flow data{'\n'}
+              • Weather forecast accuracy{'\n'}
+              • Dam release schedule changes{'\n'}
+              • Any injuries or damages
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>6. Acceptable Use</Text>
+            <Text style={styles.modalText}>
+              You agree not to:{'\n'}
+              • Reverse engineer or modify the app{'\n'}
+              • Use the app for any unlawful purpose{'\n'}
+              • Attempt to gain unauthorized access{'\n'}
+              • Redistribute app content without permission
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>7. Intellectual Property</Text>
+            <Text style={styles.modalText}>
+              All content, features, and functionality of SalmonFlow are owned by us and protected by intellectual property laws.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>8. Changes to Terms</Text>
+            <Text style={styles.modalText}>
+              We reserve the right to modify these terms at any time. Continued use of the app after changes constitutes acceptance of the new terms.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>9. Governing Law</Text>
+            <Text style={styles.modalText}>
+              These terms shall be governed by the laws of the State of New York, United States.
+            </Text>
+
+            <Text style={styles.modalSectionTitle}>10. Contact</Text>
+            <Text style={styles.modalText}>
+              For questions about these Terms of Use, contact us at:{'\n'}
+              support@salmonflow.app
+            </Text>
+
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -722,5 +902,59 @@ const styles = StyleSheet.create({
   legalDivider: {
     color: '#4B5563',
     marginHorizontal: 12,
+  },
+  // Modal Styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#0A0A0A',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'ios' ? 20 : 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1E1E1E',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  modalCloseButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#1E1E1E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalContent: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  modalLastUpdated: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 24,
+  },
+  modalSectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#10B981',
+    marginBottom: 8,
+    marginTop: 16,
+  },
+  modalText: {
+    fontSize: 14,
+    color: '#9CA3AF',
+    lineHeight: 22,
+  },
+  modalBold: {
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
