@@ -177,14 +177,13 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
     return Math.round(((monthlyAnnualCost - yearlyCost) / monthlyAnnualCost) * 100);
   }, [monthly, yearly]);
 
-  // Features list
+  // Features list - ordered for max conversion
   const features = [
     { icon: 'water', text: 'Real-Time Flow Data', subtext: 'USGS gauge readings updated every 15 min' },
+    { icon: 'fish', text: 'Prime Zone Indicator', subtext: 'Know when fishing is optimal' },
     { icon: 'analytics', text: 'Flow Trend Analysis', subtext: 'See how conditions are changing' },
     { icon: 'partly-sunny', text: 'Weather Integration', subtext: 'Temperature, precipitation & more' },
-    { icon: 'fish', text: 'Prime Zone Indicator', subtext: 'Know when fishing is optimal' },
     { icon: 'calendar', text: 'Multi-Day Forecast', subtext: 'Plan your fishing trips ahead' },
-    { icon: 'notifications', text: 'Flow Alerts', subtext: 'Get notified of prime conditions' },
   ];
 
   // Loading state
@@ -348,7 +347,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
           </View>
         )}
 
-        {/* Debug info (only in development) */}
+        {/* Debug info (only in development) - TEMPORARILY COMMENTED OUT
         {__DEV__ && (
           <View style={styles.debugContainer}>
             <Text style={styles.debugTitle}>Debug Info</Text>
@@ -359,6 +358,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
             <Text style={styles.debugText}>Lifetime: {lifetime?.product.identifier || 'None'}</Text>
           </View>
         )}
+        */}
       </ScrollView>
 
       {/* Bottom Actions */}
