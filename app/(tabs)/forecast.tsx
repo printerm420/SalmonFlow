@@ -3,14 +3,12 @@ import { Stack } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Linking,
-  Pressable,
   RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
-  View,
+  View
 } from 'react-native';
 // import { WebView } from 'react-native-webview'; // COMMENTED OUT FOR V1 - Will add back in v1.1
 
