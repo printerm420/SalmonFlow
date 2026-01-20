@@ -1,8 +1,11 @@
+import { HardPaywall } from '@/components/HardPaywall';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Linking,
+  Modal,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -10,23 +13,13 @@ import {
   Text,
   View,
 } from 'react-native';
-
-// Note: These imports are kept for when features are re-enabled
-// import { useState } from 'react';
-// import { Switch, Alert } from 'react-native';
-// import { useSubscription } from '@/contexts/SubscriptionContext';
-// import { CustomPaywall, RevenueCatPaywall } from '@/components/Paywall';
-// import { CustomSubscriptionManager, RevenueCatCustomerCenter } from '@/components/CustomerCenter';
+import Purchases from 'react-native-purchases';
 
 const APP_VERSION = '1.0.0';
 
 export default function SettingsScreen() {
-  // Subscription state - commented out for hard paywall
-  // const { isPro, subscriptionType, expirationDate, isLoading } = useSubscription();
-  
-  // Paywall & Customer Center state - commented out for hard paywall
-  // const [showPaywall, setShowPaywall] = useState(false);
-  // const [showCustomerCenter, setShowCustomerCenter] = useState(false);
+  const { isPro, customerInfo } = useSubscription();
+  const [showPaywall, setShowPaywall] = useState(false);
   
   // Notification settings - commented out for hard paywall
   // const [primeAlertEnabled, setPrimeAlertEnabled] = useState(false);
@@ -79,6 +72,61 @@ export default function SettingsScreen() {
         <View style={styles.header}>
           <Ionicons name="settings-sharp" size={22} color="#9CA3AF" style={{ marginRight: 12 }} />
           <Text style={styles.headerTitle}>Settings</Text>
+        </View>
+
+        {/* Subscription Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Ionicons name="diamond" size={18} color="#10B981" />
+            <Text style={styles.sectionTitle}>Subscription</Text>
+          </View>
+
+          <Pressable 
+            style={[styles.card, isPro && styles.cardPro]} 
+            onPress={() => {
+              if (isPro) {
+                // Open RevenueCat Customer Center
+                if (customerInfo?.managementURL) {
+                  Linking.openURL(customerInfo.managementURL);
+                } else {
+                  // Fallback: present RevenueCat's built-in customer center
+                  Purchases.presentCodeRedemptionSheet();
+                }
+              } else {
+                setShowPaywall(true);
+              }
+            }}
+          >
+            <View style={styles.subscriptionRow}>
+              <View style={styles.subscriptionIconContainer}>
+                <Ionicons 
+                  name={isPro ? 'diamond' : 'diamond-outline'} 
+                  size={24} 
+                  color={isPro ? '#10B981' : '#6B7280'} 
+                />
+              </View>
+              <View style={styles.subscriptionInfo}>
+                <View style={styles.subscriptionHeader}>
+                  <Text style={styles.subscriptionTitle}>
+                    {isPro ? 'SalmonFlow Pro' : 'Upgrade to Pro'}
+                  </Text>
+                  {isPro && (
+                    <View style={styles.activeBadge}>
+                      <View style={styles.activeDot} />
+                      <Text style={styles.activeText}>Active</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.subscriptionDescription}>
+                  {isPro 
+                    ? 'Yearly • Manage your subscription'
+                    : 'Unlock all features'
+                  }
+                </Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#4B5563" />
+            </View>
+          </Pressable>
         </View>
 
         {/* Subscription Section - Commented out for hard paywall
@@ -289,22 +337,20 @@ export default function SettingsScreen() {
 
       </ScrollView>
 
-      {/* Paywall Modal - Commented out for hard paywall
-      <CustomPaywall
+      {/* Paywall Modal */}
+      <Modal
         visible={showPaywall}
-        onClose={() => setShowPaywall(false)}
-        onSuccess={() => {
-          Alert.alert('Welcome to Pro!', 'You now have access to all premium features.');
-        }}
-      />
-      */}
-
-      {/* Customer Center Modal - Commented out for hard paywall
-      <CustomSubscriptionManager
-        visible={showCustomerCenter}
-        onClose={() => setShowCustomerCenter(false)}
-      />
-      */}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPaywall(false)}
+      >
+        <HardPaywall
+          onSubscribed={() => {
+            setShowPaywall(false);
+          }}
+          onDismiss={() => setShowPaywall(false)}
+        />
+      </Modal>
     </SafeAreaView>
   );
 }

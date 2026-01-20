@@ -1,8 +1,10 @@
+import { HardPaywall } from '@/components/HardPaywall';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import StatCard from '@/components/StatCard';
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Dimensions, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Dimensions, Modal, Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
@@ -56,8 +58,10 @@ const formatDate = (dateStr: string): string => {
 };
 
 export default function TrendsScreen() {
+  const { isPro } = useSubscription();
   const [data, setData] = useState<TrendsData>(DEFAULT_STATE);
   const [refreshing, setRefreshing] = useState(false);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   const fetchTrendsData = useCallback(async () => {
     try {
@@ -163,6 +167,52 @@ export default function TrendsScreen() {
   const trendColor = hasTrend && data.trend24hr! > 0 ? '#EF4444' : hasTrend && data.trend24hr! < 0 ? '#10B981' : '#6B7280';
   const trendIcon = hasTrend && data.trend24hr! >= 0 ? 'arrow-up' : 'arrow-down';
   
+  // If not Pro, show locked state
+  if (!isPro) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Stack.Screen options={{ headerShown: false }} />
+        
+        <View style={styles.lockedContainer}>
+          <View style={styles.lockedContent}>
+            <View style={styles.lockedIconContainer}>
+              <Ionicons name="lock-closed" size={64} color="#10B981" />
+            </View>
+            <Text style={styles.lockedTitle}>Trends Analysis</Text>
+            <Text style={styles.lockedSubtitle}>
+              Unlock detailed flow trends, historical data, and advanced analytics
+            </Text>
+            <Pressable 
+              style={styles.unlockButton}
+              onPress={() => setShowPaywall(true)}
+            >
+              <Ionicons name="diamond" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={styles.unlockButtonText}>Unlock Trends with Pro</Text>
+            </Pressable>
+            <Text style={styles.lockedFeatures}>
+              Includes: 7-day trends • Flow analytics • Prime zone history
+            </Text>
+          </View>
+        </View>
+
+        {/* Paywall Modal */}
+        <Modal
+          visible={showPaywall}
+          animationType="slide"
+          presentationStyle="pageSheet"
+          onRequestClose={() => setShowPaywall(false)}
+        >
+          <HardPaywall
+            onSubscribed={() => {
+              setShowPaywall(false);
+            }}
+            onDismiss={() => setShowPaywall(false)}
+          />
+        </Modal>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -583,5 +633,66 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontSize: 12,
     textAlign: 'center',
+  },
+  // Locked state styles
+  lockedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  lockedContent: {
+    alignItems: 'center',
+    maxWidth: 320,
+  },
+  lockedIconContainer: {
+    width: 120,
+    height: 120,
+    borderRadius: 30,
+    backgroundColor: '#10B98115',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
+    borderWidth: 2,
+    borderColor: '#10B98130',
+  },
+  lockedTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  lockedSubtitle: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    textAlign: 'center',
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  unlockButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#10B981',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    marginBottom: 16,
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  unlockButtonText: {
+    color: '#FFFFFF',
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  lockedFeatures: {
+    fontSize: 13,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
