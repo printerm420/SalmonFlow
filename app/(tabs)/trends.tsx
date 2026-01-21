@@ -167,58 +167,12 @@ export default function TrendsScreen() {
   const trendColor = hasTrend && data.trend24hr! > 0 ? '#EF4444' : hasTrend && data.trend24hr! < 0 ? '#10B981' : '#6B7280';
   const trendIcon = hasTrend && data.trend24hr! >= 0 ? 'arrow-up' : 'arrow-down';
   
-  // If not Pro, show locked state
-  if (!isPro) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Stack.Screen options={{ headerShown: false }} />
-        
-        <View style={styles.lockedContainer}>
-          <View style={styles.lockedContent}>
-            <View style={styles.lockedIconContainer}>
-              <Ionicons name="lock-closed" size={64} color="#10B981" />
-            </View>
-            <Text style={styles.lockedTitle}>Trends Analysis</Text>
-            <Text style={styles.lockedSubtitle}>
-              Unlock detailed flow trends, historical data, and advanced analytics
-            </Text>
-            <Pressable 
-              style={styles.unlockButton}
-              onPress={() => setShowPaywall(true)}
-            >
-              <Ionicons name="diamond" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.unlockButtonText}>Unlock Trends with Pro</Text>
-            </Pressable>
-            <Text style={styles.lockedFeatures}>
-              Includes: 7-day trends • Flow analytics • Prime zone history
-            </Text>
-          </View>
-        </View>
-
-        {/* Paywall Modal */}
-        <Modal
-          visible={showPaywall}
-          animationType="slide"
-          presentationStyle="pageSheet"
-          onRequestClose={() => setShowPaywall(false)}
-        >
-          <HardPaywall
-            onSubscribed={() => {
-              setShowPaywall(false);
-            }}
-            onDismiss={() => setShowPaywall(false)}
-          />
-        </Modal>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       
       <ScrollView 
-        style={styles.scrollView}
+        style={[styles.scrollView, !isPro && styles.blurredScrollView]}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl 
@@ -227,6 +181,7 @@ export default function TrendsScreen() {
             tintColor="#10B981"
           />
         }
+        scrollEnabled={isPro}
       >
         {/* Header with current flow badge */}
         <View style={styles.header}>
@@ -400,6 +355,52 @@ export default function TrendsScreen() {
         </View>
 
       </ScrollView>
+
+      {/* Lock Overlay - Only shown if not Pro */}
+      {!isPro && (
+        <>
+          {/* Dark Overlay */}
+          <View style={styles.darkOverlay} />
+
+          {/* Lock UI Overlay */}
+          <View style={styles.lockedOverlay}>
+            <View style={styles.lockedContent}>
+              <View style={styles.lockedIconContainer}>
+                <Ionicons name="lock-closed" size={64} color="#10B981" />
+              </View>
+              <Text style={styles.lockedTitle}>Trends Analysis</Text>
+              <Text style={styles.lockedSubtitle}>
+                Unlock detailed flow trends, historical data, and advanced analytics
+              </Text>
+              <Pressable 
+                style={styles.unlockButton}
+                onPress={() => setShowPaywall(true)}
+              >
+                <Ionicons name="diamond" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                <Text style={styles.unlockButtonText}>Unlock Trends with Pro</Text>
+              </Pressable>
+              <Text style={styles.lockedFeatures}>
+                Includes: 7-day trends • Flow analytics • Prime zone history
+              </Text>
+            </View>
+          </View>
+        </>
+      )}
+
+      {/* Paywall Modal */}
+      <Modal
+        visible={showPaywall}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowPaywall(false)}
+      >
+        <HardPaywall
+          onSubscribed={() => {
+            setShowPaywall(false);
+          }}
+          onDismiss={() => setShowPaywall(false)}
+        />
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -634,12 +635,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
   },
-  // Locked state styles
-  lockedContainer: {
-    flex: 1,
+  // Locked state styles - Blurred preview effect
+  blurredScrollView: {
+    opacity: 0.25,
+  },
+  darkOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#121212',
+    opacity: 0.75,
+  },
+  lockedOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
+    zIndex: 10,
   },
   lockedContent: {
     alignItems: 'center',
