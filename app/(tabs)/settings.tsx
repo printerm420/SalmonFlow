@@ -4,6 +4,7 @@ import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import { Stack } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  Alert,
   Linking,
   Modal,
   Pressable,
@@ -18,8 +19,17 @@ import Purchases from 'react-native-purchases';
 const APP_VERSION = '1.0.0';
 
 export default function SettingsScreen() {
-  const { isPro, customerInfo } = useSubscription();
+  const { isPro, customerInfo, restore } = useSubscription();
   const [showPaywall, setShowPaywall] = useState(false);
+  
+  const handleRestore = React.useCallback(async () => {
+    const success = await restore();
+    if (success) {
+      Alert.alert('Restored', 'Your subscription has been restored.');
+    } else {
+      Alert.alert('No Active Subscription', 'We could not find an active subscription for this account.');
+    }
+  }, [restore]);
   
   // Notification settings - commented out for hard paywall
   // const [primeAlertEnabled, setPrimeAlertEnabled] = useState(false);
@@ -128,6 +138,14 @@ export default function SettingsScreen() {
             </View>
           </Pressable>
         </View>
+
+        {/* Restore Purchases */}
+        <Pressable style={styles.restoreRow} onPress={handleRestore}>
+          <View style={styles.restoreIcon}>
+            <Ionicons name="refresh" size={16} color="#10B981" />
+          </View>
+          <Text style={styles.restoreText}>Restore Purchases</Text>
+        </Pressable>
 
         {/* Subscription Section - Commented out for hard paywall
         <View style={styles.section}>
@@ -438,6 +456,27 @@ const styles = StyleSheet.create({
   subscriptionDescription: {
     fontSize: 13,
     color: '#6B7280',
+  },
+  restoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    marginTop: 8,
+    marginBottom: 20,
+    gap: 10,
+  },
+  restoreIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#10B98115',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  restoreText: {
+    color: '#10B981',
+    fontSize: 14,
+    fontWeight: '600',
   },
   activeBadge: {
     flexDirection: 'row',
