@@ -12,14 +12,13 @@ import {
   Alert,
   Dimensions,
   Linking,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  View,
+  View
 } from 'react-native';
 import { PurchasesPackage } from 'react-native-purchases';
 
@@ -52,7 +51,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
   const [showReviewerEscape, setShowReviewerEscape] = useState(false);
   
   // Legal modals
-  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
+  // const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false); // COMMENTED OUT - Now using Notion link
   // const [showTermsOfUse, setShowTermsOfUse] = useState(false); // COMMENTED OUT - Now using Apple Standard EULA link
 
   // =========================================================================
@@ -396,7 +395,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
         </Text>
 
         <View style={styles.legalLinks}>
-          <Pressable onPress={() => setShowPrivacyPolicy(true)}>
+          <Pressable onPress={() => Linking.openURL('https://various-golf-5ef.notion.site/Pulaski-Salmon-Flow-Privacy-2eb4715154f5805eb58fd05c6a2e17a6?source=copy_link')}>
             <Text style={styles.legalLink}>Privacy Policy</Text>
           </Pressable>
           <Text style={styles.legalDivider}>•</Text>
@@ -406,7 +405,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
         </View>
       </View>
 
-      {/* Privacy Policy Modal */}
+      {/* Privacy Policy Modal - COMMENTED OUT - Now using Notion link
       <Modal
         visible={showPrivacyPolicy}
         animationType="slide"
@@ -486,6 +485,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
           </ScrollView>
         </View>
       </Modal>
+      */}
 
       {/* Terms of Use Modal - COMMENTED OUT - Now using Apple Standard EULA
       <Modal
