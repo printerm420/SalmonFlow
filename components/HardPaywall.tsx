@@ -272,15 +272,20 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
                 {selectedPackage === 'yearly' && <View style={styles.packageRadioInner} />}
               </View>
               <View style={styles.packageInfo}>
-                <Text style={styles.packageTitle}>Yearly</Text>
-                <Text style={styles.packagePrice}>{yearly.product.priceString}/year</Text>
-                <Text style={styles.packageSubtext}>
+                <View style={styles.packageTitleRow}>
+                  <Text style={styles.packageTitle}>Yearly</Text>
+                  <View style={styles.bestValueTag}>
+                    <MaterialCommunityIcons name="star" size={12} color="#FBBF24" />
+                    <Text style={styles.bestValueText}>Best Value</Text>
+                  </View>
+                </View>
+                <Text style={styles.packageSubtextGreen}>
                   Just ${(yearly.product.price / 12).toFixed(2)}/month
                 </Text>
               </View>
-              <View style={styles.bestValueTag}>
-                <MaterialCommunityIcons name="star" size={14} color="#FBBF24" />
-                <Text style={styles.bestValueText}>Best Value</Text>
+              <View style={styles.packagePriceContainer}>
+                <Text style={styles.packagePriceLarge}>{yearly.product.priceString}</Text>
+                <Text style={styles.packagePricePeriod}>/year</Text>
               </View>
             </Pressable>
           )}
@@ -746,11 +751,17 @@ const styles = StyleSheet.create({
   packageInfo: {
     flex: 1,
   },
+  packageTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+    flexWrap: 'wrap',
+  },
   packageTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 2,
+    marginRight: 8,
   },
   packagePrice: {
     fontSize: 15,
@@ -759,6 +770,27 @@ const styles = StyleSheet.create({
   packageSubtext: {
     fontSize: 12,
     color: '#6B7280',
+    marginTop: 2,
+  },
+  packageSubtextGreen: {
+    fontSize: 12,
+    color: '#10B981',
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  packagePriceContainer: {
+    alignItems: 'flex-end',
+    marginLeft: 12,
+  },
+  packagePriceLarge: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    lineHeight: 24,
+  },
+  packagePricePeriod: {
+    fontSize: 12,
+    color: '#9CA3AF',
     marginTop: 2,
   },
   savingsBadge: {
@@ -779,13 +811,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FBBF2420',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   bestValueText: {
     color: '#FBBF24',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     marginLeft: 4,
   },
