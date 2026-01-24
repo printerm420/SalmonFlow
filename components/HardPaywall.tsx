@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
   Dimensions,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -52,7 +53,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
   
   // Legal modals
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
-  const [showTermsOfUse, setShowTermsOfUse] = useState(false);
+  // const [showTermsOfUse, setShowTermsOfUse] = useState(false); // COMMENTED OUT - Now using Apple Standard EULA link
 
   // =========================================================================
   // X BUTTON VISIBILITY
@@ -394,7 +395,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
             <Text style={styles.legalLink}>Privacy Policy</Text>
           </Pressable>
           <Text style={styles.legalDivider}>•</Text>
-          <Pressable onPress={() => setShowTermsOfUse(true)}>
+          <Pressable onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
             <Text style={styles.legalLink}>Terms of Use</Text>
           </Pressable>
         </View>
@@ -481,7 +482,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
         </View>
       </Modal>
 
-      {/* Terms of Use Modal */}
+      {/* Terms of Use Modal - COMMENTED OUT - Now using Apple Standard EULA
       <Modal
         visible={showTermsOfUse}
         animationType="slide"
@@ -574,6 +575,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
           </ScrollView>
         </View>
       </Modal>
+      */}
     </View>
   );
 }
