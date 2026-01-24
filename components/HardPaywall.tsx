@@ -385,8 +385,8 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
 
         <Text style={styles.legalText}>
           {Platform.OS === 'ios'
-            ? 'Payment will be charged to your Apple ID account. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'
-            : 'Payment will be charged to your Google Play account. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'}
+            ? 'Payment of $29.99 will be charged to your Apple ID account. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'
+            : 'Payment of $29.99will be charged to your Google Play account. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'}
         </Text>
 
         <View style={styles.legalLinks}>
