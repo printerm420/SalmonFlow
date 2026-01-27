@@ -380,14 +380,6 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
           )}
         </Pressable>
 
-        <Pressable
-          style={styles.restoreButton}
-          onPress={handleRestore}
-          disabled={isProcessing || isLoading}
-        >
-          <Text style={styles.restoreButtonText}>Restore Purchase</Text>
-        </Pressable>
-
         <Text style={styles.legalText}>
           {Platform.OS === 'ios'
             ? 'Payment of $29.99 will be charged to your Apple ID account. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'
@@ -401,6 +393,10 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
           <Text style={styles.legalDivider}>•</Text>
           <Pressable onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
             <Text style={styles.legalLink}>Terms of Use</Text>
+          </Pressable>
+          <Text style={styles.legalDivider}>•</Text>
+          <Pressable onPress={handleRestore} disabled={isProcessing || isLoading}>
+            <Text style={styles.legalLink}>Restore Purchases</Text>
           </Pressable>
         </View>
       </View>
@@ -628,8 +624,8 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: 'center',
-    marginBottom: 20,
-    paddingTop: 10,
+    marginBottom: 12,
+    paddingTop: 6,
   },
   iconContainer: {
     width: 100,
@@ -665,8 +661,8 @@ const styles = StyleSheet.create({
   featuresContainer: {
     backgroundColor: '#141414',
     borderRadius: 24,
-    padding: 20,
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#1E1E1E',
   },
@@ -680,12 +676,12 @@ const styles = StyleSheet.create({
   featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 10,
   },
   featureIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#10B98110',
     alignItems: 'center',
     justifyContent: 'center',
@@ -695,17 +691,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   featureText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 2,
   },
   featureSubtext: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#6B7280',
   },
   packagesContainer: {
-    marginBottom: 12,
+    marginBottom: 8,
   },
   packagesTitle: {
     fontSize: 18,
@@ -719,8 +715,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#141414',
     borderRadius: 18,
-    padding: 18,
-    marginBottom: 12,
+    padding: 14,
+    marginBottom: 8,
     borderWidth: 2,
     borderColor: '#1E1E1E',
     position: 'relative',
@@ -733,9 +729,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   packageRadio: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     borderWidth: 2,
     borderColor: '#4B5563',
     alignItems: 'center',
@@ -880,8 +876,8 @@ const styles = StyleSheet.create({
   },
   bottomActions: {
     paddingHorizontal: 24,
-    paddingTop: 10,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 26 : 18,
     borderTopWidth: 1,
     borderTopColor: '#1E1E1E',
     backgroundColor: '#0A0A0A',
@@ -890,6 +886,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
     borderRadius: 18,
     paddingVertical: 16,
+    marginBottom: 10,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#10B981',
@@ -898,13 +895,13 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 8,
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
   purchaseButtonText: {
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '800',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   restoreButton: {
     paddingVertical: 10,
@@ -921,12 +918,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 15,
     paddingHorizontal: 12,
+    marginTop: 10,
   },
   legalLinks: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 8,
   },
   legalLink: {
     color: '#6B7280',
