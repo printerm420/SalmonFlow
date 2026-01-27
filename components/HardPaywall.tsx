@@ -227,9 +227,9 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
           </Pressable>
           <Text style={styles.title}>Pulaski Salmon</Text>
           <Text style={styles.tagline}>Salmon River at Pulaski, NY</Text>
-          <Text style={styles.subtitle}>
+          {/* <Text style={styles.subtitle}>
             Your essential companion for Salmon River fishing conditions
-          </Text>
+          </Text> */}
         </View>
 
         {/* Features Section */}
@@ -250,7 +250,7 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
 
         {/* Packages Section */}
         <View style={styles.packagesContainer}>
-          <Text style={styles.packagesTitle}>Choose Your Plan</Text>
+          {/* <Text style={styles.packagesTitle}>Choose Your Plan</Text> */}
 
           {/* Yearly Package */}
           {yearly && (
@@ -628,8 +628,8 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: 'center',
-    marginBottom: 32,
-    paddingTop: 20,
+    marginBottom: 20,
+    paddingTop: 10,
   },
   iconContainer: {
     width: 100,
@@ -665,8 +665,8 @@ const styles = StyleSheet.create({
   featuresContainer: {
     backgroundColor: '#141414',
     borderRadius: 24,
-    padding: 24,
-    marginBottom: 24,
+    padding: 20,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#1E1E1E',
   },
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   packagesContainer: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   packagesTitle: {
     fontSize: 18,
@@ -880,8 +880,8 @@ const styles = StyleSheet.create({
   },
   bottomActions: {
     paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 24,
+    paddingTop: 10,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
     borderTopWidth: 1,
     borderTopColor: '#1E1E1E',
     backgroundColor: '#0A0A0A',
@@ -889,7 +889,7 @@ const styles = StyleSheet.create({
   purchaseButton: {
     backgroundColor: '#10B981',
     borderRadius: 18,
-    paddingVertical: 20,
+    paddingVertical: 16,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#10B981',
@@ -907,12 +907,12 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   restoreButton: {
-    paddingVertical: 14,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   restoreButtonText: {
     color: '#6B7280',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   legalText: {
