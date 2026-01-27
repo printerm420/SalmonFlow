@@ -5,7 +5,7 @@
  * Production users see a hard paywall with no escape
  */
 import { usePackages, useSubscription } from '@/contexts/SubscriptionContext';
-import { FontAwesome6, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { FontAwesome6, Ionicons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -262,25 +262,28 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
               ]}
               onPress={() => setSelectedPackage('yearly')}
             >
-              {yearlySavings > 0 && (
+              {/* savings badge commented out to keep the billed amount as the most prominent pricing element */}
+              {/* {yearlySavings > 0 && (
                 <View style={styles.savingsBadge}>
                   <Text style={styles.savingsText}>Save {yearlySavings}%</Text>
                 </View>
-              )}
+              )} */}
               <View style={styles.packageRadio}>
                 {selectedPackage === 'yearly' && <View style={styles.packageRadioInner} />}
               </View>
               <View style={styles.packageInfo}>
                 <View style={styles.packageTitleRow}>
                   <Text style={styles.packageTitle}>Yearly</Text>
-                  <View style={styles.bestValueTag}>
+                  {/* Best value badge commented out to avoid App Review confusion */}
+                  {/* <View style={styles.bestValueTag}>
                     <MaterialCommunityIcons name="star" size={12} color="#FBBF24" />
                     <Text style={styles.bestValueText}>Best Value</Text>
-                  </View>
+                  </View> */}
                 </View>
-                <Text style={styles.packageSubtextGreen}>
+                {/* monthly breakdown commented out to keep total billed amount primary */}
+                {/* <Text style={styles.packageSubtextGreen}>
                   Just ${(yearly.product.price / 12).toFixed(2)}/month
-                </Text>
+                </Text> */}
               </View>
               <View style={styles.packagePriceContainer}>
                 <Text style={styles.packagePriceLarge}>{yearly.product.priceString}</Text>
@@ -376,14 +379,14 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
           {isProcessing ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
-            <Text style={styles.purchaseButtonText}>Start Fishing Smarter</Text>
+            <Text style={styles.purchaseButtonText}>Continue</Text>
           )}
         </Pressable>
 
         <Text style={styles.legalText}>
           {Platform.OS === 'ios'
-            ? 'Payment of $29.99 will be charged to your Apple ID account. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'
-            : 'Payment of $29.99will be charged to your Google Play account. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.'}
+            ? `Payment of ${yearly?.product.priceString ?? '$29.99'} will be charged to your Apple ID account. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.`
+            : `Payment of ${yearly?.product.priceString ?? '$29.99'} will be charged to your Google Play account. Subscription automatically renews unless cancelled at least 24 hours before the end of the current period.`}
         </Text>
 
         <View style={styles.legalLinks}>
@@ -628,18 +631,18 @@ const styles = StyleSheet.create({
     paddingTop: 6,
   },
   iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 30,
+    width: 96,
+    height: 96,
+    borderRadius: 28,
     backgroundColor: '#10B98115',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
     borderWidth: 2,
     borderColor: '#10B98130',
   },
   title: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 4,
@@ -661,7 +664,7 @@ const styles = StyleSheet.create({
   featuresContainer: {
     backgroundColor: '#141414',
     borderRadius: 24,
-    padding: 16,
+    padding: 18,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: '#1E1E1E',
@@ -670,13 +673,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 20,
+    marginBottom: 14,
     textAlign: 'center',
   },
   featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   featureIcon: {
     width: 40,
@@ -699,6 +702,7 @@ const styles = StyleSheet.create({
   featureSubtext: {
     fontSize: 12,
     color: '#6B7280',
+    lineHeight: 16,
   },
   packagesContainer: {
     marginBottom: 8,
@@ -726,7 +730,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B98108',
   },
   packageCardBestValue: {
-    marginBottom: 16,
+    marginBottom: 10,
   },
   packageRadio: {
     width: 22,
@@ -779,8 +783,8 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   packagePriceLarge: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '800',
     color: '#FFFFFF',
     lineHeight: 24,
   },
