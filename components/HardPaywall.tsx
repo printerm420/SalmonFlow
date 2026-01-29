@@ -280,10 +280,10 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
                     <Text style={styles.bestValueText}>Best Value</Text>
                   </View> */}
                 </View>
-                {/* monthly breakdown commented out to keep total billed amount primary */}
-                {/* <Text style={styles.packageSubtextGreen}>
+                {/* Monthly breakdown - secondary line under main billed amount */}
+                <Text style={styles.packageSubtextGreen}>
                   Just ${(yearly.product.price / 12).toFixed(2)}/month
-                </Text> */}
+                </Text>
               </View>
               <View style={styles.packagePriceContainer}>
                 <Text style={styles.packagePriceLarge}>{yearly.product.priceString}</Text>
