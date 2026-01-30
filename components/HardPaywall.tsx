@@ -179,11 +179,11 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
 
   // Features list - ordered for max conversion
   const features = [
-    { icon: 'water', text: 'Real-Time Flow Data', subtext: 'USGS gauge readings updated every 15 min' },
-    { icon: 'fish', text: 'Prime Zone Indicator', subtext: 'Know when fishing is optimal' },
-    { icon: 'analytics', text: 'Flow Trend Analysis', subtext: 'See how conditions are changing' },
-    { icon: 'partly-sunny', text: 'Weather Integration', subtext: 'Temperature, precipitation & more' },
-    { icon: 'calendar', text: 'Multi-Day Forecast', subtext: 'Plan your fishing trips ahead' },
+    { icon: 'water', text: 'Real-Time Flow Data', subtext: 'LIVE condition updates every 15 min' },
+    { icon: 'fish', text: 'Prime Zone Indicator', subtext: 'Instant Prime Zone Alerts' },
+    { icon: 'analytics', text: 'Flow Trend Analysis', subtext: 'Rising or Falling? Plan tomorrow.' },
+    { icon: 'partly-sunny', text: 'Weather Integration', subtext: 'Full 7-day forecast, pick the perfect day.' },
+    { icon: 'calendar', text: 'Multi-Day Forecast', subtext: 'See the best fishing windows!' },
   ];
 
   // Loading state
@@ -225,8 +225,8 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
           <Pressable onPress={handleLogoTap} style={styles.iconContainer}>
             <FontAwesome6 name="fish-fins" size={48} color="#10B981" />
           </Pressable>
-          <Text style={styles.title}>Pulaski Salmon </Text>
-          <Text style={styles.tagline}>Salmon River at Pulaski, NY</Text>
+          <Text style={styles.title}>Salmon River (Live)</Text>
+          <Text style={styles.tagline}>Pulaski, Oswego, Altmar, Douglaston...</Text>
           {/* <Text style={styles.subtitle}>
             Your essential companion for Salmon River fishing conditions
           </Text> */}
@@ -234,11 +234,11 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
 
         {/* Features Section */}
         <View style={styles.featuresContainer}>
-          <Text style={styles.featuresTitle}>Everything You Need</Text>
+          <Text style={styles.featuresTitle}>Never Miss a Trip!</Text>
           {features.map((feature, index) => (
             <View key={index} style={styles.featureRow}>
               <View style={styles.featureIcon}>
-                <Ionicons name={feature.icon as any} size={20} color="#10B981" />
+                <Ionicons name={feature.icon as any} size={24} color="#10B981" />
               </View>
               <View style={styles.featureInfo}>
                 <Text style={styles.featureText}>{feature.text}</Text>
@@ -608,8 +608,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 24,
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 56,
+    paddingBottom: 16,
   },
   closeButton: {
     position: 'absolute',
@@ -627,17 +627,17 @@ const styles = StyleSheet.create({
   },
   heroSection: {
     alignItems: 'center',
-    marginBottom: 12,
-    paddingTop: 6,
+    marginBottom: 8,
+    paddingTop: 2,
   },
   iconContainer: {
-    width: 96,
-    height: 96,
-    borderRadius: 28,
+    width: 92,
+    height: 92,
+    borderRadius: 26,
     backgroundColor: '#10B98115',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
     borderWidth: 2,
     borderColor: '#10B98130',
   },
@@ -645,13 +645,13 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: '#FFFFFF',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   tagline: {
     fontSize: 14,
     color: '#10B981',
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 8,
     letterSpacing: 0.5,
   },
   subtitle: {
@@ -664,8 +664,8 @@ const styles = StyleSheet.create({
   featuresContainer: {
     backgroundColor: '#141414',
     borderRadius: 24,
-    padding: 18,
-    marginBottom: 12,
+    padding: 20,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: '#1E1E1E',
   },
@@ -673,45 +673,45 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 14,
+    marginBottom: 12,
     textAlign: 'center',
   },
   featureRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   featureIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 46,
+    height: 46,
+    borderRadius: 14,
     backgroundColor: '#10B98110',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 16,
+    marginRight: 14,
   },
   featureInfo: {
     flex: 1,
   },
   featureText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
     marginBottom: 2,
   },
   featureSubtext: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#6B7280',
-    lineHeight: 16,
+    lineHeight: 18,
   },
   packagesContainer: {
-    marginBottom: 8,
+    marginBottom: 6,
   },
   packagesTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 16,
+    marginBottom: 12,
     textAlign: 'center',
   },
   packageCard: {
@@ -720,7 +720,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#141414',
     borderRadius: 18,
     padding: 14,
-    marginTop: 10,
+    marginTop: 6,
     marginBottom: 8,
     borderWidth: 2,
     borderColor: '#1E1E1E',

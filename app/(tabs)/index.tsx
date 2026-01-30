@@ -278,7 +278,7 @@ export default function StatusScreen() {
         {/* Header - minimal, top */}
         <View style={styles.header}>
           <FontAwesome6 name="fish-fins" size={24} color="#10B981" style={{ marginRight: 12 }} />
-          <Text style={styles.headerTitle}>Pulaski Salmon Flow</Text>
+          <Text style={styles.headerTitle}>Salmon River (Live)</Text>
         </View>
 
         {/* Hero Gauge - the main event */}

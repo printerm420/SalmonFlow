@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "SalmonFlow",
+    "name": "Salmon River Live",
     "slug": "SalmonFlow",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "salmonflow",
@@ -10,7 +10,10 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.salmonflow.app"
+      "bundleIdentifier": "com.salmonflow.app",
+      "infoPlist": {
+        "CFBundleDisplayName": "Salmon River Live"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -35,9 +38,9 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#0A0A0A",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#0A0A0A"
           }
         }
       ]
