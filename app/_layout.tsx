@@ -2,11 +2,17 @@ import { SubscriptionProvider, useSubscription } from '@/contexts/SubscriptionCo
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+
+// Aptabase Analytics
+import { init as initAptabase } from '@aptabase/react-native';
 
 import { HardPaywall } from '@/components/HardPaywall';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+
+// Initialize Aptabase analytics on app start
+const APTABASE_KEY = 'A-US-3185191607';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -14,15 +20,33 @@ export const unstable_settings = {
 
 /**
  * Main App Content
- * Only shown after user subscribes (or in sandbox mode)
+ * FREEMIUM MODE: All users can access all tabs immediately
+ * Paywall code is commented out but preserved for future use
  */
 function AppContent() {
   const colorScheme = useColorScheme();
   const { isPro, isInitialized, isSandbox } = useSubscription();
   
+  // Initialize Aptabase on mount
+  useEffect(() => {
+    try {
+      initAptabase(APTABASE_KEY);
+      console.log('[Aptabase] Initialized with key:', APTABASE_KEY);
+    } catch (error) {
+      console.log('[Aptabase] Initialization error (non-fatal):', error);
+    }
+  }, []);
+  
   // Track if user has dismissed paywall (only possible in sandbox/review mode)
   const [paywallDismissed, setPaywallDismissed] = useState(false);
 
+  // =========================================================================
+  // FREEMIUM MODE - PAYWALL DISABLED
+  // =========================================================================
+  // Uncomment the block below to re-enable hard paywall
+  // =========================================================================
+  
+  /*
   // Show paywall if:
   // 1. Not initialized yet (paywall shows loading)
   // 2. Not Pro AND not dismissed (or can't be dismissed in production)
@@ -50,8 +74,9 @@ function AppContent() {
       />
     );
   }
+  */
 
-  // User is subscribed (or dismissed in sandbox mode) - show app
+  // FREEMIUM: Show app immediately to all users
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
@@ -66,6 +91,7 @@ function AppContent() {
 /**
  * Root Layout
  * Wraps the entire app with SubscriptionProvider
+ * RevenueCat still initializes to track downloads
  */
 export default function RootLayout() {
   return (

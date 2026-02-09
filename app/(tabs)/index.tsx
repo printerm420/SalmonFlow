@@ -1,7 +1,8 @@
 import FlowGauge from '@/components/FlowGauge';
 import StatCard from '@/components/StatCard';
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { trackEvent } from '@aptabase/react-native';
+import { Stack, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
@@ -84,6 +85,13 @@ export default function StatusScreen() {
   const [barometer, setBarometer] = useState<BarometerData>(DEFAULT_BAROMETER_STATE);
   const [refreshing, setRefreshing] = useState(false);
   const [timeAgo, setTimeAgo] = useState('just now');
+
+  // Track screen view
+  useFocusEffect(
+    useCallback(() => {
+      trackEvent('view_status');
+    }, [])
+  );
 
   // Pulsing animation for status dot
   const pulseOpacity = useSharedValue(1);

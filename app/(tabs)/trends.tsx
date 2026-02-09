@@ -2,7 +2,8 @@ import { HardPaywall } from '@/components/HardPaywall';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import StatCard from '@/components/StatCard';
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { trackEvent } from '@aptabase/react-native';
+import { Stack, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Dimensions, Modal, Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
@@ -62,6 +63,13 @@ export default function TrendsScreen() {
   const [data, setData] = useState<TrendsData>(DEFAULT_STATE);
   const [refreshing, setRefreshing] = useState(false);
   const [showPaywall, setShowPaywall] = useState(false);
+
+  // Track screen view
+  useFocusEffect(
+    useCallback(() => {
+      trackEvent('view_trends');
+    }, [])
+  );
 
   const fetchTrendsData = useCallback(async () => {
     try {

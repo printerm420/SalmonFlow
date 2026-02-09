@@ -1,5 +1,6 @@
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
+import { trackEvent } from '@aptabase/react-native';
+import { Stack, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -125,6 +126,13 @@ export default function ForecastScreen() {
   const [data, setData] = useState<WeatherData>(DEFAULT_STATE);
   // const [webViewLoading, setWebViewLoading] = useState(true); // COMMENTED OUT FOR V1
   const [refreshing, setRefreshing] = useState(false);
+
+  // Track screen view
+  useFocusEffect(
+    useCallback(() => {
+      trackEvent('view_forecast');
+    }, [])
+  );
 
   const fetchWeatherData = useCallback(async () => {
     try {

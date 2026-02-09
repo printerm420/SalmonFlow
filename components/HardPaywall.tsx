@@ -20,6 +20,7 @@ import {
   Text,
   View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PurchasesPackage } from 'react-native-purchases';
 
 const { width, height } = Dimensions.get('window');
@@ -29,7 +30,20 @@ interface HardPaywallProps {
   onDismiss?: () => void;
 }
 
+// Platform-specific legal links
+const LEGAL_LINKS = {
+  ios: {
+    privacyPolicy: 'https://various-golf-5ef.notion.site/Pulaski-Salmon-Flow-Privacy-2eb4715154f5805eb58fd05c6a2e17a6?source=copy_link',
+    termsOfUse: 'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/',
+  },
+  android: {
+    privacyPolicy: 'https://various-golf-5ef.notion.site/Salmon-River-Live-Privacy-Policy-2fa4715154f58083a752f5cb6fd4445b?source=copy_link',
+    termsOfUse: 'https://various-golf-5ef.notion.site/Salmon-River-Live-Terms-of-Use-2fa4715154f580eea27dcb28d6968672?source=copy_link',
+  },
+};
+
 export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
+  const insets = useSafeAreaInsets();
   const {
     purchase,
     restore,
@@ -42,6 +56,9 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
   } = useSubscription();
   
   const { monthly, yearly, lifetime } = usePackages();
+  
+  // Get platform-specific links
+  const legalLinks = Platform.OS === 'ios' ? LEGAL_LINKS.ios : LEGAL_LINKS.android;
 
   const [selectedPackage, setSelectedPackage] = useState<'monthly' | 'yearly' | 'lifetime'>('yearly');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -369,8 +386,14 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
         */}
       </ScrollView>
 
-      {/* Bottom Actions */}
-      <View style={styles.bottomActions}>
+      {/* Bottom Actions - with safe area padding for Android */}
+      <View style={[
+        styles.bottomActions,
+        // Apply extra bottom padding on Android to ensure buttons are above nav bar
+        Platform.OS === 'android' && {
+          paddingBottom: Math.max(insets.bottom, 24) + 16,
+        }
+      ]}>
         <Pressable
           style={[styles.purchaseButton, (isProcessing || (!yearly && !monthly && !lifetime)) && styles.buttonDisabled]}
           onPress={handlePurchase}
@@ -390,15 +413,25 @@ export function HardPaywall({ onSubscribed, onDismiss }: HardPaywallProps) {
         </Text>
 
         <View style={styles.legalLinks}>
-          <Pressable onPress={() => Linking.openURL('https://various-golf-5ef.notion.site/Pulaski-Salmon-Flow-Privacy-2eb4715154f5805eb58fd05c6a2e17a6?source=copy_link')}>
+          <Pressable 
+            onPress={() => Linking.openURL(legalLinks.privacyPolicy)}
+            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+          >
             <Text style={styles.legalLink}>Privacy Policy</Text>
           </Pressable>
           <Text style={styles.legalDivider}>•</Text>
-          <Pressable onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
+          <Pressable 
+            onPress={() => Linking.openURL(legalLinks.termsOfUse)}
+            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+          >
             <Text style={styles.legalLink}>Terms of Use</Text>
           </Pressable>
           <Text style={styles.legalDivider}>•</Text>
-          <Pressable onPress={handleRestore} disabled={isProcessing || isLoading}>
+          <Pressable 
+            onPress={handleRestore} 
+            disabled={isProcessing || isLoading}
+            hitSlop={{ top: 12, bottom: 12, left: 8, right: 8 }}
+          >
             <Text style={styles.legalLink}>Restore Purchases</Text>
           </Pressable>
         </View>
@@ -882,7 +915,7 @@ const styles = StyleSheet.create({
   bottomActions: {
     paddingHorizontal: 24,
     paddingTop: 12,
-    paddingBottom: Platform.OS === 'ios' ? 26 : 18,
+    paddingBottom: Platform.OS === 'ios' ? 26 : 18, // Android will get additional padding via inline styles with safe area insets
     borderTopWidth: 1,
     borderTopColor: '#1E1E1E',
     backgroundColor: '#0A0A0A',
@@ -930,11 +963,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
+    // Extra padding for Android touch targets
+    ...(Platform.OS === 'android' && {
+      paddingVertical: 8,
+    }),
   },
   legalLink: {
     color: '#6B7280',
     fontSize: 12,
     fontWeight: '500',
+    // Slightly larger tap target on Android
+    ...(Platform.OS === 'android' && {
+      paddingVertical: 4,
+      paddingHorizontal: 2,
+    }),
   },
   legalDivider: {
     color: '#4B5563',

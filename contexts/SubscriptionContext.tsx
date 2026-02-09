@@ -15,8 +15,9 @@ import Purchases, {
 // CONFIGURATION
 // ============================================================================
 
-// Your RevenueCat Apple API Key (starts with appl_)
-const REVENUECAT_API_KEY = 'appl_oanrZIXGSLFVfgOfLPdTPJMcgeL';
+// RevenueCat API Keys
+const REVENUECAT_IOS_API_KEY = 'appl_oanrZIXGSLFVfgOfLPdTPJMcgeL';
+const REVENUECAT_ANDROID_API_KEY = 'goog_PyZYFViqyaRlMIBGhhroEMGmKVT'; // Replace with your actual Android API key from RevenueCat
 
 // Your entitlement ID from RevenueCat dashboard
 const ENTITLEMENT_ID = 'Pro';
@@ -125,13 +126,15 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
         // Set log level for debugging
         Purchases.setLogLevel(__DEV__ ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR);
 
-        // Configure RevenueCat - iOS only for now
+        // Configure RevenueCat for iOS and Android
         if (Platform.OS === 'ios') {
-          await Purchases.configure({ apiKey: REVENUECAT_API_KEY });
+          await Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY });
           console.log('[RevenueCat] Configured with iOS API key');
+        } else if (Platform.OS === 'android') {
+          await Purchases.configure({ apiKey: REVENUECAT_ANDROID_API_KEY });
+          console.log('[RevenueCat] Configured with Android API key');
         } else {
-          // For Android, you'd use a different key
-          console.log('[RevenueCat] Android not configured yet');
+          console.log('[RevenueCat] Platform not supported');
           setIsInitialized(true);
           setIsLoading(false);
           return;
@@ -195,16 +198,20 @@ export function SubscriptionProvider({ children }: { children: React.ReactNode }
             }
           }
         } else {
-          console.log('[RevenueCat] No current offering available');
-          setError('No subscription plans available. Please try again later.');
+          // FREEMIUM MODE: No error if products unavailable - app works without purchases
+          console.log('[RevenueCat] No current offering available (freemium mode - this is OK)');
+          // Don't set error in freemium mode - app should still work
+          // setError('No subscription plans available. Please try again later.');
         }
 
         setIsInitialized(true);
         setError(null);
       } catch (err) {
-        console.error('[RevenueCat] Initialization error:', err);
-        setError(err instanceof Error ? err.message : 'Failed to initialize subscriptions');
-        setIsInitialized(true); // Still mark as initialized so UI can show error
+        // FREEMIUM MODE: Don't crash if RevenueCat fails - app works without it
+        console.log('[RevenueCat] Initialization error (non-fatal in freemium mode):', err);
+        // Don't set error in freemium mode - app should still work
+        // setError(err instanceof Error ? err.message : 'Failed to initialize subscriptions');
+        setIsInitialized(true); // Still mark as initialized so app can load
       } finally {
         setIsLoading(false);
       }

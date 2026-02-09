@@ -1,8 +1,9 @@
 import { HardPaywall } from '@/components/HardPaywall';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { FontAwesome6, Ionicons } from '@expo/vector-icons';
-import { Stack } from 'expo-router';
-import React, { useState } from 'react';
+import { trackEvent } from '@aptabase/react-native';
+import { Stack, useFocusEffect } from 'expo-router';
+import React, { useCallback, useState } from 'react';
 import {
   Alert,
   Linking,
@@ -21,8 +22,15 @@ const APP_VERSION = '1.0.0';
 export default function SettingsScreen() {
   const { isPro, customerInfo, restore } = useSubscription();
   const [showPaywall, setShowPaywall] = useState(false);
+
+  // Track screen view
+  useFocusEffect(
+    useCallback(() => {
+      trackEvent('view_settings');
+    }, [])
+  );
   
-  const handleRestore = React.useCallback(async () => {
+  const handleRestore = useCallback(async () => {
     const success = await restore();
     if (success) {
       Alert.alert('Restored', 'Your subscription has been restored.');
